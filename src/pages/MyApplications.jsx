@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import Sidebar from '../components/Sidebar'
+import StudentSidebar from '../components/StudentSidebar'
+import TopBar from '../components/TopBar'
 
 const applications = [
   {
@@ -65,38 +66,18 @@ export default function MyApplications() {
 
   return (
     <div className="bg-surface text-on-surface min-h-screen">
-      <Sidebar />
+      <StudentSidebar />
+      <TopBar
+        sidebar="student"
+        placeholder="Search applications by title or status..."
+        userName="Alex Chen"
+        userRole="Design Fellow"
+        userImage="https://lh3.googleusercontent.com/aida-public/AB6AXuDEwLKAATFnd_z7zz4LsxU0IUQhpzoY_Umlo1vEl1wmGVX7MxTi6PgEWfIo_CF35aOYDxT6SgiY35jr9bm_cKlPr1CZGkUf1DaNuaEHcERVfq8HqTFB-Q9fy9sTvYUsoDA1AzC1MoOE1Y749QdYaggJhhmCk9km2Nr9_9PVinwnOPBCWYP78Gcpgvntqp2hFEshBW7_BDJ_6ttsw4VOcrSnvg2rC6GO3JIVTSJ9MQnomX3Pf-Vx0gCdIbt1us_m3JT-mjF86XZQqug"
+      />
 
-      <main className="ml-64 min-h-screen">
-        {/* Top Nav */}
-        <header className="w-full sticky top-0 z-40 glass-header flex justify-between items-center px-8 py-3 shadow-ambient">
-          <div className="flex items-center flex-1 max-w-xl">
-            <div className="relative w-full">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-              <input
-                className="w-full pl-12 pr-4 py-2.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm outline-none"
-                placeholder="Search applications by title or status..."
-                type="text"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-6 ml-8">
-            <div className="flex items-center gap-3 border-l pl-6 border-outline-variant/30">
-              <div className="text-right">
-                <p className="text-xs font-bold font-headline">Alex Chen</p>
-                <p className="text-[10px] text-on-surface-variant">Design Fellow</p>
-              </div>
-              <img
-                alt="User profile"
-                className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEwLKAATFnd_z7zz4LsxU0IUQhpzoY_Umlo1vEl1wmGVX7MxTi6PgEWfIo_CF35aOYDxT6SgiY35jr9bm_cKlPr1CZGkUf1DaNuaEHcERVfq8HqTFB-Q9fy9sTvYUsoDA1AzC1MoOE1Y749QdYaggJhhmCk9km2Nr9_9PVinwnOPBCWYP78Gcpgvntqp2hFEshBW7_BDJ_6ttsw4VOcrSnvg2rC6GO3JIVTSJ9MQnomX3Pf-Vx0gCdIbt1us_m3JT-mjF86XZQqug"
-              />
-            </div>
-          </div>
-        </header>
-
+      <main className="px-4 pb-12 pt-24 lg:ml-64 lg:px-8 lg:pt-28">
         {/* Content Area */}
-        <div className="p-10 space-y-12">
+        <div className="space-y-12">
           {/* Header Section */}
           <section className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div className="space-y-2">

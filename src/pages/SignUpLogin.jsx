@@ -1,8 +1,113 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { loginStudent, signupStudent } from '../api/authApi'
 
 export default function SignUpLogin() {
   const [activeTab, setActiveTab] = useState('signup')
+  const [signupForm, setSignupForm] = useState({
+    sapId: '',
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
+  const [loginForm, setLoginForm] = useState({
+    email: '',
+    password: '',
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const navigate = useNavigate()
+
+  const handleSignupChange = event => {
+    const { name, value } = event.target
+    setSignupForm(prev => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleLoginChange = event => {
+    const { name, value } = event.target
+    setLoginForm(prev => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = async event => {
+    event.preventDefault()
+
+    if (isSubmitting) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      if (activeTab === 'signup') {
+        if (signupForm.password !== signupForm.confirmPassword) {
+          alert('Passwords do not match')
+          return
+        }
+
+        await signupStudent({
+  name: signupForm.fullName,
+  sap_id: signupForm.sapId,
+  email: signupForm.email,
+  password: signupForm.password,
+})
+        alert('Signup successful! Please login.')
+        setSignupForm({
+          sapId: '',
+          fullName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+        })
+        setActiveTab('login')
+        return
+      }
+
+      const response = await loginStudent({
+        email: loginForm.email,
+        password: loginForm.password,
+      })
+
+      const token = response.data?.token || response.data?.accessToken
+
+      if (token) {
+        localStorage.setItem('token', token)
+      }
+
+      navigate('/student-dashboard')
+    } catch (error) {
+  console.log("FULL ERROR:", error)
+  console.log("RESPONSE DATA:", error?.response?.data)
+  console.log("STATUS:", error?.response?.status)
+  console.log("REQUEST PAYLOAD:", activeTab === 'signup'
+    ? {
+        sapId: signupForm.sapId,
+        fullName: signupForm.fullName,
+        email: signupForm.email,
+        password: signupForm.password,
+      }
+    : {
+        email: loginForm.email,
+        password: loginForm.password,
+      }
+  )
+
+  alert(
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    JSON.stringify(error?.response?.data) ||
+    error.message ||
+    'Something went wrong'
+  )
+}finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <main className="flex min-h-screen overflow-hidden">
@@ -27,25 +132,6 @@ export default function SignUpLogin() {
           <p className="text-on-surface-variant text-lg leading-relaxed mb-12 max-w-md">
             Where prestigious mentorship meets modern ambition. Join a curated ecosystem of scholarly leaders and professional artisans.
           </p>
-          <div className="flex items-center gap-8">
-            <div className="flex flex-col">
-              <span className="font-headline font-bold text-3xl text-primary">2.4k+</span>
-              <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant/70">Active Mentors</span>
-            </div>
-            <div className="h-10 w-px bg-outline-variant/30"></div>
-            <div className="flex flex-col">
-              <span className="font-headline font-bold text-3xl text-secondary">98%</span>
-              <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant/70">Success Rate</span>
-            </div>
-          </div>
-          <div className="mt-20 flex -space-x-4">
-            <img className="w-12 h-12 rounded-full border-4 border-surface shadow-md" alt="Portrait of a male professional mentor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlm16JPnW2ayGaoa_zCrzB86VepF-fqslynsgLM_bPosVUnDBSRjvf1sRN20fBT_Rmi6y7VuXfkMfUIL8xYE9HeUPZLBrMTjFvbOu0c0YOA1jCO7BrOIVSKRtL1Axofb8I3216UaRVLxQ1Sn5hOUXA6yeyPNZdMIJ9wJGfC9s0IS-TPof3wmJkdpLlGyhPyluk3xIFNByGNBEdxidZhy3o_1zgL_CZwoofOXZQd1-phwYxRY_OVXrb_Xf68Sg-5N08dtjN7oVDMCE" />
-            <img className="w-12 h-12 rounded-full border-4 border-surface shadow-md" alt="Portrait of a female creative mentor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu9H4Mdeh_vblVShrEF2eawjbaX-iKHS__LYtV_COybAwv-gT6Wp1YdrWA3EuJ_kmGrV5DJr2Kah3iI4uruWIyhx2buFK1WNMFKDLOhjIFxht6Ewq7Y-o1FYKUhuTHa1DidvwLW4ZgJR1XUlynYBt_wkKWYC3xRHXBfKQxZN4eEYC3F88sWpFCKzc6o4QrSH7JWnEuCLOd2iTD3Kzz08kyeZHDGIhvRZv0j1XqCy5zsMu5GAWmvRuHDF5XS1nBo9VXcDWQKbS45e8" />
-            <img className="w-12 h-12 rounded-full border-4 border-surface shadow-md" alt="Portrait of an academic professor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZ_hPbF9de6sLUZzfCRBjfKmwexqNNQX8raimsntb4qmKmsTjASBWfhN0Ocsp1LUl7kRkQujNv-hz8_LbwhowC55mN2e3VncijsS5X14Vk3lrXaxrgcm4uqIrKxvFUK-3gsdAig_ShKIImYBZoQhdnj2rT2fUCv_LDIe4cGncyND_BmDJZjKCj93vnYj6knhLALU_3Ub3fZi8XtKK-A6gZCUlztKBK6EQRHAoz7xKic_yAWA_xSUBwTYEQ49JfD46N_uEm68ADp7s" />
-            <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center border-4 border-surface shadow-md">
-              <span className="text-xs font-bold text-white">+2k</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -98,21 +184,21 @@ export default function SignUpLogin() {
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={e => e.preventDefault()}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {activeTab === 'signup' && (
               <>
                 <div className="space-y-2">
                   <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">SAP ID</label>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">badge</span>
-                    <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" placeholder="Enter your SAP ID" type="text" />
+                    <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="sapId" placeholder="Enter your SAP ID" type="text" value={signupForm.sapId} onChange={handleSignupChange} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Full Name</label>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">person</span>
-                    <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" placeholder="Jane Doe" type="text" />
+                    <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="fullName" placeholder="Jane Doe" type="text" value={signupForm.fullName} onChange={handleSignupChange} />
                   </div>
                 </div>
               </>
@@ -122,7 +208,7 @@ export default function SignUpLogin() {
               <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">University Email</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">alternate_email</span>
-                <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" placeholder="jane.doe@university.edu" type="email" />
+                <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="email" placeholder="jane.doe@university.edu" type="email" value={activeTab === 'signup' ? signupForm.email : loginForm.email} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
               </div>
             </div>
 
@@ -130,7 +216,7 @@ export default function SignUpLogin() {
               <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Password</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">lock</span>
-                <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" placeholder="••••••••" type="password" />
+                <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="password" placeholder="........" type="password" value={activeTab === 'signup' ? signupForm.password : loginForm.password} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
               </div>
             </div>
 
@@ -139,17 +225,24 @@ export default function SignUpLogin() {
                 <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Confirm Password</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">lock_reset</span>
-                  <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" placeholder="••••••••" type="password" />
+                  <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="confirmPassword" placeholder="........" type="password" value={signupForm.confirmPassword} onChange={handleSignupChange} />
                 </div>
               </div>
             )}
 
-            <Link
-              to={activeTab === 'signup' ? '/onboarding' : '/student-dashboard'}
-              className="block w-full py-4 mt-4 bg-gradient-to-r from-primary to-secondary-container text-white font-bold rounded-full shadow-primary-glow hover:scale-[1.02] transition-transform duration-300 text-center"
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="block w-full py-4 mt-4 bg-gradient-to-r from-primary to-secondary-container text-white font-bold rounded-full shadow-primary-glow hover:scale-[1.02] transition-transform duration-300 text-center disabled:opacity-70 disabled:hover:scale-100"
             >
-              {activeTab === 'signup' ? 'Create Account' : 'Sign In'}
-            </Link>
+              {isSubmitting
+                ? activeTab === 'signup'
+                  ? 'Creating Account...'
+                  : 'Signing In...'
+                : activeTab === 'signup'
+                  ? 'Create Account'
+                  : 'Sign In'}
+            </button>
           </form>
 
           <div className="relative my-10 text-center">
