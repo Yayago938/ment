@@ -48,6 +48,22 @@ const formatEventDate = event => {
   }
 }
 
+const normalizeCommittees = response => {
+  if (Array.isArray(response)) {
+    return response
+  }
+
+  if (Array.isArray(response?.data)) {
+    return response.data
+  }
+
+  if (Array.isArray(response?.committees)) {
+    return response.committees
+  }
+
+  return []
+}
+
 export default function StudentDashboard() {
   const [events, setEvents] = useState([])
   const [committees, setCommittees] = useState([])
@@ -72,7 +88,7 @@ export default function StudentDashboard() {
         console.log('Student dashboard committees response:', committeesRes)
 
         const eventsRaw = eventsRes.data?.data || eventsRes.data?.events || eventsRes.data || []
-        const committeesRaw = committeesRes.data?.data || committeesRes.data?.committees || committeesRes.data || []
+        const committeesRaw = normalizeCommittees(committeesRes)
         const safeEvents = Array.isArray(eventsRaw) ? eventsRaw : []
         const safeCommittees = Array.isArray(committeesRaw) ? committeesRaw : []
 

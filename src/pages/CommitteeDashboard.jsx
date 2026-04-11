@@ -1,6 +1,9 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
 import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
+import { getCommitteeById } from '../api/committeeApi'
 
 const stats = [
   ['Total Pipeline', '142', '12%', 'Active Applications', 'description', 'text-primary'],
@@ -14,23 +17,110 @@ const applications = [
   ['Jordan Hayes', 'Applied for Brand Ambassador', 'New', 'https://lh3.googleusercontent.com/aida-public/AB6AXuDgjsRj2mhnkefo3PQCbHBzxfph4MQBVPNHkGq7G1RhXsEBcqNIpvIuLZzgKGHgeDeyGYjd2GFpayE9L8fc-2TL52Lwwx_TXPr4cZO6zBHIW-m_hS1k9BDL-7UIDw2iWvh6W-tqYmIdoTj7ZzIA6YPg-WEyCWv8AohCvJkxnDS_3lZDkbJbalpbXeejgk70EaWBSpoytKA3EoKPVFBXn5k6Ov-45VLFr3VN50IZ_7J3E3FrfW8B8ZO21RM2pUKHlAPThzSmobHftvI', 'bg-primary-fixed text-on-primary-fixed-variant'],
 ]
 
+const normalizeCommittee = response => {
+  if (response?.data && !Array.isArray(response.data)) {
+    return response.data
+  }
+
+  if (response?.committee) {
+    return response.committee
+  }
+
+  if (response?.data?.committee) {
+    return response.data.committee
+  }
+
+  return response
+}
+
 export default function CommitteeDashboard() {
+  const { id } = useParams()
+  const [committee, setCommittee] = useState(null)
+  const [loadingCommittee, setLoadingCommittee] = useState(Boolean(id))
+  const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    if (!id) {
+      return
+    }
+
+    const loadCommittee = async () => {
+      setLoadingCommittee(true)
+      setErrorMessage('')
+
+      try {
+        const response = await getCommitteeById(id)
+        setCommittee(normalizeCommittee(response))
+      } catch (error) {
+        setErrorMessage(error.response?.data?.message || 'Unable to load committee details.')
+      } finally {
+        setLoadingCommittee(false)
+      }
+    }
+
+    loadCommittee()
+  }, [id])
+
+  const committeeData = useMemo(() => ({
+    committee_name: committee?.committee_name || 'Committee Dashboard',
+    tagline: committee?.tagline || 'Committee Lead Workspace',
+    description: committee?.description || 'Use this dashboard to monitor committee performance, track applicants, and coordinate upcoming events.',
+    affiliated_faculty: committee?.affiliated_faculty || { name: 'Alex Rivera' },
+    start_year: committee?.start_year || '2024',
+    tags: Array.isArray(committee?.tags) ? committee.tags : [],
+  }), [committee])
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <CommitteeSidebar />
       <TopBar
         sidebar="committee"
         placeholder="Search applications..."
-        userName="Alex Rivera"
-        userRole="Committee Lead"
+        userName={committeeData.affiliated_faculty?.name || 'Committee Lead'}
+        userRole={id ? 'Committee Dashboard' : 'Committee Lead'}
         userImage="https://lh3.googleusercontent.com/aida-public/AB6AXuBlnMwMiijKv4SJYQ2_QLTHTAtBMGIIcsK_eIZFsEjO22G7PNZNaEemJvklXWhRzpTu7BbQdL3IS8dKkSEVZXMtLYv0tV_z3EwtyGj86ss0fDXNlY5J9Oe7kwgRs5Q0H1pbzlOMduQGuWiwtoYGWa1QKvqkRdfBRI7hILUxI1FLP05GSkj77_bLGakapEmdHcNzlf7T7Ju6lPSMIux-6N5yEBzkN5K_uc11oPeQV67J4pDbaEU1QrCT2SscFxRQ5LPiwjNDhmv3Acg"
         actions={['notifications', 'settings']}
       />
 
       <main className="px-4 pb-12 pt-24 lg:ml-64 lg:p-10 lg:pt-24">
-        <section>
-          <h1 className="font-headline text-5xl font-extrabold tracking-tight">Welcome back, Alex.</h1>
-          <p className="mt-2 text-lg text-on-surface-variant">The atelier has 12 pending applications and 3 events this week.</p>
+        <section className="rounded-[32px] bg-[linear-gradient(135deg,rgba(85,69,206,0.96),rgba(244,114,182,0.88))] p-8 text-white shadow-[0_25px_70px_rgba(85,69,206,0.22)]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/70">
+                {id ? `Committee ID ${id}` : 'Committee Portal'}
+              </p>
+              <h1 className="mt-4 font-headline text-4xl font-extrabold tracking-tight lg:text-5xl">
+                {committeeData.committee_name}
+              </h1>
+              <p className="mt-3 text-lg text-white/90">{committeeData.tagline}</p>
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/80">{committeeData.description}</p>
+            </div>
+
+            <div className="grid gap-3 rounded-[28px] bg-white/10 p-5 backdrop-blur-sm">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/70">Faculty Lead</p>
+                <p className="mt-2 text-lg font-bold">{committeeData.affiliated_faculty?.name || 'Not assigned'}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]">
+                  Started {committeeData.start_year}
+                </span>
+                {committeeData.tags.slice(0, 3).map(tag => (
+                  <span key={tag} className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {loadingCommittee ? (
+            <p className="mt-6 text-sm text-white/80">Loading committee dashboard...</p>
+          ) : null}
+
+          {errorMessage ? (
+            <p className="mt-6 rounded-2xl bg-white/10 px-4 py-3 text-sm text-white">{errorMessage}</p>
+          ) : null}
         </section>
 
         <section className="mt-8 grid gap-6 md:grid-cols-3">
