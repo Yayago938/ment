@@ -11,6 +11,9 @@ export default function TopBar({
   notificationsTo,
   profileTo,
 }) {
+  const storedUserName = localStorage.getItem('userName') || 'Student'
+  const resolvedUserName = userName || storedUserName
+  const resolvedUserRole = userRole || 'Student'
   const resolvedNotificationsTo = notificationsTo || (sidebar === 'committee' ? '/committee/notifications' : '/notifications')
   const resolvedProfileTo = profileTo || (sidebar === 'committee' ? '/committee/profile' : '/profile')
   const contentOffset = sidebar === 'committee' ? 'lg:ml-64' : 'lg:pl-64'
@@ -57,12 +60,12 @@ export default function TopBar({
         <div className="h-8 w-px bg-outline-variant/30" />
         <Link to={resolvedProfileTo} className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-bold text-on-surface">{userName}</p>
+            <p className="text-sm font-bold text-on-surface">{resolvedUserName}</p>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-              {userRole}
+              {resolvedUserRole}
             </p>
           </div>
-          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white" src={userImage} alt={userName} />
+          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white" src={userImage} alt={resolvedUserName} />
         </Link>
       </div>
     </header>

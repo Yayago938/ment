@@ -9,14 +9,16 @@ const contributions = [
 ]
 
 export default function StudentProfile() {
+  const userName = localStorage.getItem('userName') || 'Student'
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <StudentSidebar />
       <TopBar
         sidebar="student"
         placeholder="Search mentorships, students, portfolios..."
-        userName="Elena Rodriguez"
-        userRole="Top Contributor"
+        userName={userName}
+        userRole="Student"
         userImage="https://lh3.googleusercontent.com/aida-public/AB6AXuBxvAvrCAKcv0Qo3oOvVSdUvA-5u92JBDVxzA9JbqceXY9lF-4vjFeFJVL2FAUDC1VkvoXSMTGjlCNN315YRT_bsVzx8n5GrqBnQFMQ-ZjuXCxSoOE0qxcKaWeyZgyCKII_WBEofQhnqHiY2GUH6VnFLwziWGUJJKHRpysQv65pu4iNHUzO7-QQgkX3LOpaY-WSE3KIRKJLYXEM1WFOMeSppJS8PBZBKArn94B72OY23XOZE5lADJ9Z-WI8PV6SKhhwwV0Q5lGgC2Q"
       />
 
@@ -27,7 +29,7 @@ export default function StudentProfile() {
             <h1 className="font-headline mt-4 text-4xl font-extrabold tracking-tight">Student Profile</h1>
             <p className="mt-2 text-on-surface-variant">Overview of student details, skills, and campus involvement.</p>
           </div>
-          <Link to="/profile/edit" className="rounded-full border border-outline-variant px-6 py-3 text-sm font-bold text-primary">
+          <Link to="/edit-student-profile" className="rounded-full border border-outline-variant px-6 py-3 text-sm font-bold text-primary">
             Edit
           </Link>
         </div>
@@ -37,14 +39,14 @@ export default function StudentProfile() {
             <section className="grid gap-8 rounded-[28px] border border-outline-variant/10 bg-white p-8 shadow-sm md:grid-cols-[auto,1fr]">
               <div className="relative mx-auto md:mx-0">
                 <div className="h-48 w-48 overflow-hidden rounded-[28px] ring-4 ring-primary-fixed/50">
-                  <img className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsI-bw3VtCpIIjSBLpU7BOOjlBqnxIby2i1O-xugAAznZQoRzfyZZySvtQL6m7_IqgAobQ7awNjd3dagTgi4UYq5MhzTQlO6uD_YQZDvMI9lNxHithFKTCViTuBpXUg7v82HvcWjfr2MiXgKOwpEiOJoNNGxU_pb195SbOH5g6kloPiO924yqyucPqENAt0R0tLYTffmqF0LxWpC6XQhl7CAGPDOxY3mJVkVIX9FDeGWBnIU6JyLPwwQoipsu6uQU-v8s-_6w_UrM" alt="Elena Rodriguez" />
+                  <img className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsI-bw3VtCpIIjSBLpU7BOOjlBqnxIby2i1O-xugAAznZQoRzfyZZySvtQL6m7_IqgAobQ7awNjd3dagTgi4UYq5MhzTQlO6uD_YQZDvMI9lNxHithFKTCViTuBpXUg7v82HvcWjfr2MiXgKOwpEiOJoNNGxU_pb195SbOH5g6kloPiO924yqyucPqENAt0R0tLYTffmqF0LxWpC6XQhl7CAGPDOxY3mJVkVIX9FDeGWBnIU6JyLPwwQoipsu6uQU-v8s-_6w_UrM" alt={userName} />
                 </div>
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-secondary-container px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-on-secondary-container">Top Contributor</div>
               </div>
 
               <div className="text-center md:text-left">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                  <h2 className="font-headline text-3xl font-extrabold">Elena Rodriguez</h2>
+                  <h2 className="font-headline text-3xl font-extrabold">{userName}</h2>
                   <span className="rounded-full bg-primary-fixed px-3 py-1 text-xs font-semibold text-on-primary-fixed-variant">Committee Head</span>
                 </div>
                 <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-on-surface-variant md:justify-start">

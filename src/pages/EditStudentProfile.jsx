@@ -1,6 +1,23 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 
 export default function EditStudentProfile() {
+  const [fullName, setFullName] = useState(localStorage.getItem('userName') || '')
+  const navigate = useNavigate()
+
+  const handleSubmit = event => {
+    event.preventDefault()
+
+    if (fullName) {
+      localStorage.setItem('userName', fullName)
+    }
+
+    localStorage.setItem('profileCompleted', 'true')
+    localStorage.setItem('onboardingCompleted', 'true')
+    navigate('/student-dashboard')
+  }
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <Sidebar />
@@ -18,13 +35,13 @@ export default function EditStudentProfile() {
             <p className="mt-2 text-lg text-on-surface-variant">Update your student profile, academic details, and application-ready information.</p>
           </div>
 
-          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-8" onSubmit={handleSubmit}>
             <section className="rounded-[28px] bg-white p-10 shadow-[0_20px_40px_rgba(123,110,246,0.04)]">
               <h2 className="font-headline text-xl font-bold">Personal Info</h2>
               <div className="mt-8 space-y-8">
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Full Name</label>
-                  <input className="mt-2 w-full rounded-2xl bg-surface-container-low px-6 py-4 font-medium outline-none focus:ring-2 focus:ring-primary" defaultValue="Elena Rodriguez" />
+                  <input className="mt-2 w-full rounded-2xl bg-surface-container-low px-6 py-4 font-medium outline-none focus:ring-2 focus:ring-primary" value={fullName} onChange={event => setFullName(event.target.value)} />
                 </div>
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">About You</label>
@@ -59,6 +76,12 @@ export default function EditStudentProfile() {
                 </div>
               </div>
             </section>
+
+            <div className="flex justify-end">
+              <button type="submit" className="rounded-full bg-gradient-to-r from-primary to-secondary-container px-8 py-4 text-sm font-bold text-white shadow-[0_20px_40px_rgba(123,110,246,0.2)]">
+                Save Profile
+              </button>
+            </div>
           </form>
         </div>
       </main>

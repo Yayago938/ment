@@ -51,12 +51,17 @@ export default function SignUpLogin() {
         }
 
         await signupStudent({
-  name: signupForm.fullName,
-  sap_id: signupForm.sapId,
-  email: signupForm.email,
-  password: signupForm.password,
-})
-        alert('Signup successful! Please login.')
+          name: signupForm.fullName,
+          sap_id: signupForm.sapId,
+          email: signupForm.email,
+          password: signupForm.password,
+        })
+
+        localStorage.setItem('userName', signupForm.fullName)
+        localStorage.setItem('userEmail', signupForm.email)
+        localStorage.setItem('onboardingCompleted', 'false')
+        localStorage.setItem('profileCompleted', 'false')
+
         setSignupForm({
           sapId: '',
           fullName: '',
@@ -64,7 +69,8 @@ export default function SignUpLogin() {
           password: '',
           confirmPassword: '',
         })
-        setActiveTab('login')
+
+        navigate('/personalization-intro')
         return
       }
 
@@ -74,37 +80,49 @@ export default function SignUpLogin() {
       })
 
       const token = response.data?.token || response.data?.accessToken
+      const userName = response.data?.name || response.data?.user?.name || response.data?.fullName || response.data?.user?.fullName
+      const userEmail = response.data?.email || response.data?.user?.email
 
       if (token) {
         localStorage.setItem('token', token)
       }
 
+      if (userName) {
+        localStorage.setItem('userName', userName)
+      }
+
+      if (userEmail) {
+        localStorage.setItem('userEmail', userEmail)
+      }
+
       navigate('/student-dashboard')
     } catch (error) {
-  console.log("FULL ERROR:", error)
-  console.log("RESPONSE DATA:", error?.response?.data)
-  console.log("STATUS:", error?.response?.status)
-  console.log("REQUEST PAYLOAD:", activeTab === 'signup'
-    ? {
-        sapId: signupForm.sapId,
-        fullName: signupForm.fullName,
-        email: signupForm.email,
-        password: signupForm.password,
-      }
-    : {
-        email: loginForm.email,
-        password: loginForm.password,
-      }
-  )
+      console.log('FULL ERROR:', error)
+      console.log('RESPONSE DATA:', error?.response?.data)
+      console.log('STATUS:', error?.response?.status)
+      console.log(
+        'REQUEST PAYLOAD:',
+        activeTab === 'signup'
+          ? {
+              sapId: signupForm.sapId,
+              fullName: signupForm.fullName,
+              email: signupForm.email,
+              password: signupForm.password,
+            }
+          : {
+              email: loginForm.email,
+              password: loginForm.password,
+            },
+      )
 
-  alert(
-    error?.response?.data?.message ||
-    error?.response?.data?.error ||
-    JSON.stringify(error?.response?.data) ||
-    error.message ||
-    'Something went wrong'
-  )
-}finally {
+      alert(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          JSON.stringify(error?.response?.data) ||
+          error.message ||
+          'Something went wrong',
+      )
+    } finally {
       setIsSubmitting(false)
     }
   }

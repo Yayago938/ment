@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
 const interests = [
@@ -17,12 +17,21 @@ const interests = [
 ]
 
 export default function InterestsQuestionnaire() {
-  const [selectedInterests, setSelectedInterests] = useState([])
+  const [selectedInterests, setSelectedInterests] = useState(() => {
+    const saved = localStorage.getItem('userInterests')
+    return saved ? JSON.parse(saved) : []
+  })
+  const navigate = useNavigate()
 
   function toggleInterest(id) {
     setSelectedInterests((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
     )
+  }
+
+  function handleContinue() {
+    localStorage.setItem('userInterests', JSON.stringify(selectedInterests))
+    navigate('/recommendations')
   }
 
   return (
@@ -99,11 +108,12 @@ export default function InterestsQuestionnaire() {
 
       <div className="fixed bottom-0 left-0 w-full bg-surface/80 px-8 py-8 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
-          <Link to="/onboarding" className="rounded-full border border-outline-variant px-10 py-4 font-bold text-primary">
+          <Link to="/personalization-intro" className="rounded-full border border-outline-variant px-10 py-4 font-bold text-primary">
             Back
           </Link>
-          <Link
-            to="/recommendations"
+          <button
+            type="button"
+            onClick={handleContinue}
             className={`rounded-full px-12 py-4 font-bold text-white shadow-[0_20px_40px_rgba(123,110,246,0.2)] ${
               selectedInterests.length > 0
                 ? 'bg-gradient-to-r from-primary to-secondary-container'
@@ -111,7 +121,7 @@ export default function InterestsQuestionnaire() {
             }`}
           >
             Continue
-          </Link>
+          </button>
         </div>
       </div>
     </div>

@@ -9,6 +9,8 @@ const studentNav = [
 ]
 
 export default function StudentSidebar() {
+  const userName = localStorage.getItem('userName') || 'Student'
+
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col border-r border-white/40 bg-[#faf8ff] px-6 py-8 lg:flex">
       <div className="mb-12">
@@ -45,12 +47,12 @@ export default function StudentSidebar() {
         <img
           className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/10"
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpnlTjpqYIsCoZ5khwkRrFm8_emkxZGSfsWQtl_6IdianwZU7Za24L8fsTlufqaghErqy1IKVItEGcwE4v5qH6_FQW84epxB0e5AsMJVot1T2rOPtXrH--WUv3MH8k5y6QcDf-L_01oVI6aSLzglmGpr6WYngyOJycmJbFB80AfRa6Y2rBj0qsHZO96vrnNhNrwmw-mDxvN6Np0pn119Ewhv132eUndE6nkNQB6djZUgap2v_dR42L4s-ZkengTiC0pCSn9AqB8_4"
-          alt="Alex Rivera"
+          alt={userName}
         />
         <div>
-          <p className="text-sm font-bold text-on-surface">Alex Rivera</p>
+          <p className="text-sm font-bold text-on-surface">{userName}</p>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-            Sophomore
+            Student
           </p>
         </div>
       </Link>

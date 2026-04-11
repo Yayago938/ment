@@ -20,7 +20,7 @@ export default function PersonalizationIntro() {
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-on-surface-variant md:text-xl">Take a 2-minute questionnaire to find the perfect clubs and mentors.</p>
         </div>
-        <Link to="/onboarding/interests" className="inline-flex rounded-full bg-gradient-to-br from-primary to-secondary-container px-10 py-5 text-lg font-bold text-white shadow-[0_20px_40px_rgba(123,110,246,0.2)] transition-all hover:scale-105">
+        <Link to="/interests-questionnaire" className="inline-flex rounded-full bg-gradient-to-br from-primary to-secondary-container px-10 py-5 text-lg font-bold text-white shadow-[0_20px_40px_rgba(123,110,246,0.2)] transition-all hover:scale-105">
           Start Questionnaire
         </Link>
       </section>

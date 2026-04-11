@@ -16,14 +16,16 @@ const people = [
 ]
 
 export default function Recommendations() {
+  const userName = localStorage.getItem('userName') || 'Student'
+
   return (
     <div className="min-h-screen bg-background text-on-surface">
       <StudentSidebar />
       <TopBar
         sidebar="student"
         placeholder="Search people, skills, or clubs..."
-        userName="Alex Rivera"
-        userRole="Explorer"
+        userName={userName}
+        userRole="Student"
         userImage="https://lh3.googleusercontent.com/aida-public/AB6AXuA_e5YA48CeTVgUXixdFT304tZ_oOiojwLHPErCcZ3hskrWzT9yKGz1vmD67nrSlMQYNis34dlwn0I6mS2mS_CCO-dDnQKnRd6jHuokefySQPPkLml1BlazdAWPw8yleusjtgvXFusjHqS6qygN7YrIYz4Gm00jzdzfjAM-OCByjDEsaXqrEZAIJZKKn_9OxLpmAAjH7WkFI6qAO5qVJoLPjSX9djhRe6BhT-GB_Ru1PocZSHRbIy3D-KePqcDHaqlg4s7wXPU5JHQ"
         actions={['notifications', 'mail']}
       />
@@ -35,6 +37,9 @@ export default function Recommendations() {
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-on-surface-variant">
             We&apos;ve curated a selection of opportunities tailored to your creative trajectory and professional goals. Explore your custom matches.
           </p>
+          <Link to="/edit-student-profile" className="mt-8 inline-flex rounded-full bg-gradient-to-r from-primary to-secondary-container px-8 py-4 text-sm font-bold text-white shadow-[0_20px_40px_rgba(123,110,246,0.2)]">
+            Continue Setup
+          </Link>
         </section>
 
         <section className="mb-20">
@@ -93,7 +98,7 @@ export default function Recommendations() {
                   ))}
                 </div>
                 <Link
-                  to="/profile"
+                  to={featured ? '/edit-student-profile' : '/profile'}
                   className={`block w-full rounded-full py-4 text-center text-sm font-bold transition-colors ${featured ? 'gradient-pill text-white' : 'bg-surface-container-low text-primary hover:bg-primary-fixed'}`}
                 >
                   View Profile

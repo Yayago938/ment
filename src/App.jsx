@@ -27,6 +27,7 @@ export default function App() {
       <Route path="/login" element={<SignUpLogin />} />
       <Route path="/finding-matches" element={<FindingMatches />} />
       <Route path="/committee-detail" element={<CommitteeDetail />} />
+      <Route path="/committee-detail/:id" element={<CommitteeDetail />} />
       <Route path="/committee/profile" element={<CommitteeProfile />} />
       <Route path="/committee/profile/edit" element={<CommitteeProfileEdit />} />
       <Route path="/applications" element={<MyApplications />} />
@@ -38,13 +39,16 @@ export default function App() {
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/committee/notifications" element={<Notifications variant="committee" />} />
       <Route path="/opportunities/product-design-internship" element={<OpportunityDetail />} />
-      <Route path="/onboarding" element={<PersonalizationIntro />} />
-      <Route path="/onboarding/interests" element={<InterestsQuestionnaire />} />
+      <Route path="/personalization-intro" element={<PersonalizationIntro />} />
+      <Route path="/interests-questionnaire" element={<InterestsQuestionnaire />} />
       <Route path="/recommendations" element={<Recommendations />} />
+      <Route path="/edit-student-profile" element={<EditStudentProfile />} />
       <Route path="/profile" element={<StudentProfile />} />
       <Route path="/profile/edit" element={<EditStudentProfile />} />
       <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
       <Route path="/events/new" element={<CreateEvent />} />
+      <Route path="/onboarding" element={<Navigate to="/personalization-intro" replace />} />
+      <Route path="/onboarding/interests" element={<Navigate to="/interests-questionnaire" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )

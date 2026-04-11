@@ -1,68 +1,100 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
+import { deleteEventRegistration, getEventRegistrations } from '../api/eventRegistrationApi'
 
-const applications = [
-  {
-    id: 1,
-    title: 'Product Design Internship',
-    org: 'Visionary Lab',
-    date: 'Applied Oct 08, 2023',
-    status: 'Under Review',
-    statusStyle: 'bg-surface-container-high text-on-surface-variant',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxjKRTkBGPyCNCV2tP_hlT_CD2OgnZy78_4NXqk9JW16hKlSD5Y_MqpaMNXejh3K5BcFYr5I7Hc_fW7fXQqlHpdBbeDv3qJclEX_8PNI5CG-X9M2DBioXW011vO3ZT-JmAAo3IFpi8D0AEoRl3BMLHgBmdn-Kdosx4Z7qdyUJA66oFQmYTsL00Mbvxh8UV0LYp_kqwiz9dVyxQS4aaRFXFpUaBvGSnTGKTPFCNinud8xgoHQX2HRUfDMIcOH7h8gLCxwgjEP-LQVk',
-    imgAlt: 'Abstract tech company logo mark on a clean grey background',
-  },
-  {
-    id: 2,
-    title: 'Visual Arts Residency 2024',
-    org: 'Metropolitan Arts Council',
-    date: 'Applied Oct 12, 2023',
-    status: 'Shortlisted',
-    statusStyle: 'bg-primary-fixed text-on-primary-fixed-variant',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDdepnJF79DeKS8Vd6PfQJDWfd2F8fB4G2jpPpBED-phSCuhBHIustYj1UhGfBS5EOKBEORRghgs6LpZ-jS0kXIll0GlC_TrUzJvOtbPFXb0gYtq1P7gmtZfajuQ5A8s100kVaqxhLefcxlz5ATJnCQtqX00QUzWKh3saAVA0D9pX7ppIck4tzsJSGmyfo7MoIPd8GGSZsypfiYntT2JD1XwWh91Tzs5nLHyeExoaQal3YzI7GGnKkZX1NmcLgdQ8G6dmFzyQc_TXk',
-    imgAlt: 'Minimalist art gallery branding logo',
-  },
-  {
-    id: 3,
-    title: 'Campus Ambassador Program',
-    org: 'Stellar Systems',
-    date: 'Applied Oct 15, 2023',
-    status: 'Applied',
-    statusStyle: 'bg-surface-container-low text-on-surface-variant',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIod_H3jRYNWmeztz7Rmc8kOPYo4K083eO9N9uRXIK43fIOCdtPVKjrISm4P7QQDVVDSdhOOGUdb5MONh8t5pRJWUKDRXYa7eNHSa4Oo3djQh4u4rZaVgokXW04yBhjhD2uNjw8Q7wuokM9zds0-RHqFIJ3zx8JI3gHmYBx1qA0ouLv3kiit1b7FlSKyZYhQMgDnAahf7yDnc8_Txip6aWWwfPZ7cRQvwL0FT4TF31WeqPR1g4kI6C8xRDKNkKXXjCC8bPJ5lvriQ',
-    imgAlt: 'Minimal geometric design icon for a software company',
-  },
-  {
-    id: 4,
-    title: 'UI/UX Workshop Fellowship',
-    org: 'Digital Design Institute',
-    date: 'Applied Sept 30, 2023',
-    status: 'Accepted',
-    statusStyle: 'bg-secondary-fixed text-on-secondary-fixed-variant',
-    icon: 'draw',
-  },
-  {
-    id: 5,
-    title: 'Research Assistant Opportunity',
-    org: 'Social Impact Lab',
-    date: 'Applied Sept 15, 2023',
-    status: 'Closed',
-    statusStyle: 'bg-error-container text-on-error-container',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOL50Cxbj_1O0AazcFZJAMHbDwr2VQhdrYVZsZTGcDJ4Fkiz_3h2dlQqicClUdqnLiGfP6B1W0KOJuXuQ09zFHO_zjloUZNsvnaORi2z6sGXQl5Lb92gumrx-2CZ9Ysdot-T3OxG3PmiRULddV0KvA7zUrCDHCNhdvnKwboM8M0654jfoiRhi1Ddpa__9GnXD4vo8IeNWjjpGtY8rjMgyIsQZ3hf5VIO3mgW4rwzMgGBsbMcb2ENHeWpFc40iDmUDrO43s8jDYItA',
-    imgAlt: 'Modern corporate office building aesthetic',
-    faded: true,
-  },
-]
+const EVENT_ID = '8a35bc6b-6f2c-4b3e-a3f2-3c717553071b'
 
 const filterOptions = ['All', 'Applied', 'Under Review', 'Shortlisted', 'Accepted', 'Rejected', 'Closed']
 
+const getStatusStyle = status => {
+  switch (status) {
+    case 'Applied':
+      return 'bg-surface-container-low text-on-surface-variant'
+    case 'Under Review':
+      return 'bg-surface-container-high text-on-surface-variant'
+    case 'Shortlisted':
+      return 'bg-primary-fixed text-on-primary-fixed-variant'
+    case 'Accepted':
+      return 'bg-secondary-fixed text-on-secondary-fixed-variant'
+    case 'Rejected':
+    case 'Closed':
+      return 'bg-error-container text-on-error-container'
+    default:
+      return 'bg-surface-container-low text-on-surface-variant'
+  }
+}
+
+const mapRegistrationToApplication = registration => {
+  const status = registration.status || 'Applied'
+
+  return {
+    id: registration._id || registration.id,
+    title: registration.event?.title || registration.event?.name || 'Registered Event',
+    org: registration.event?.committee?.name || registration.event?.organization || 'MentorLink Event',
+    date: registration.createdAt
+      ? `Applied ${new Date(registration.createdAt).toLocaleDateString()}`
+      : 'Applied recently',
+    status,
+    statusStyle: getStatusStyle(status),
+    icon: 'description',
+  }
+}
+
 export default function MyApplications() {
+  const [applications, setApplications] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [activeFilter, setActiveFilter] = useState('All')
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      setLoading(true)
+      setError('')
+
+      try {
+        const response = await getEventRegistrations(EVENT_ID)
+        console.log('Event registrations response:', response)
+
+        const raw = response.data?.data || response.data?.registrations || response.data || []
+        const registrations = Array.isArray(raw) ? raw : []
+        const mappedApplications = registrations.map(mapRegistrationToApplication)
+
+        setApplications(mappedApplications)
+      } catch (fetchError) {
+        console.error('Failed to fetch registrations:', fetchError)
+        setError(fetchError.response?.data?.message || 'Failed to load applications.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchApplications()
+  }, [])
+
+  const handleDelete = async registrationId => {
+    const confirmed = window.confirm('Are you sure you want to delete this application?')
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      await deleteEventRegistration(registrationId)
+      setApplications(prev => prev.filter(app => app.id !== registrationId))
+    } catch (deleteError) {
+      alert(deleteError.response?.data?.message || 'Something went wrong')
+    }
+  }
 
   const filtered = activeFilter === 'All'
     ? applications
-    : applications.filter(a => a.status === activeFilter)
+    : applications.filter(app => app.status === activeFilter)
+
+  const activeApplicationsCount = applications.filter(app =>
+    !['Rejected', 'Closed'].includes(app.status)
+  ).length
+  const shortlistedCount = applications.filter(app => app.status === 'Shortlisted').length
 
   return (
     <div className="bg-surface text-on-surface min-h-screen">
@@ -90,9 +122,9 @@ export default function MyApplications() {
             {/* Stats */}
             <div className="flex gap-4">
               {[
-                { icon: 'hourglass_empty', bg: 'bg-primary-fixed', iconColor: 'text-on-primary-fixed-variant', value: '03', label: 'Active Applications' },
-                { icon: 'checklist', bg: 'bg-secondary-fixed', iconColor: 'text-on-secondary-fixed-variant', value: '12', label: 'Total Applications' },
-                { icon: 'star', bg: 'bg-tertiary-fixed', iconColor: 'text-on-tertiary-fixed-variant', value: '02', label: 'Shortlisted' },
+                { icon: 'hourglass_empty', bg: 'bg-primary-fixed', iconColor: 'text-on-primary-fixed-variant', value: String(activeApplicationsCount).padStart(2, '0'), label: 'Active Applications' },
+                { icon: 'checklist', bg: 'bg-secondary-fixed', iconColor: 'text-on-secondary-fixed-variant', value: String(applications.length).padStart(2, '0'), label: 'Total Applications' },
+                { icon: 'star', bg: 'bg-tertiary-fixed', iconColor: 'text-on-tertiary-fixed-variant', value: String(shortlistedCount).padStart(2, '0'), label: 'Shortlisted' },
               ].map((stat) => (
                 <div key={stat.label} className="bg-surface-container-low px-6 py-4 rounded-lg flex items-center gap-4">
                   <div className={`w-10 h-10 ${stat.bg} flex items-center justify-center rounded-full ${stat.iconColor}`}>
@@ -111,7 +143,15 @@ export default function MyApplications() {
           <div className="grid grid-cols-12 gap-6">
             {/* Application List (span 8) */}
             <div className="col-span-12 lg:col-span-8 space-y-4">
-              {filtered.map((app) => (
+              {loading && (
+                <p className="text-sm text-on-surface-variant">Loading applications...</p>
+              )}
+
+              {error && (
+                <p className="text-sm text-error">{error}</p>
+              )}
+
+              {!loading && !error && filtered.map((app) => (
                 <div
                   key={app.id}
                   className={`group bg-surface-container-lowest p-6 rounded-lg transition-all hover:translate-x-1 hover:shadow-ambient flex items-center justify-between ${app.faded ? 'opacity-70' : ''}`}
@@ -137,12 +177,19 @@ export default function MyApplications() {
                     <span className={`px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${app.statusStyle}`}>
                       {app.status}
                     </span>
-                    <button className="p-2 rounded-full hover:bg-surface-container-low text-outline transition-colors">
+                    <button
+                      onClick={() => handleDelete(app.id)}
+                      className="p-2 rounded-full hover:bg-surface-container-low text-outline transition-colors"
+                    >
                       <span className="material-symbols-outlined">more_vert</span>
                     </button>
                   </div>
                 </div>
               ))}
+
+              {!loading && !error && filtered.length === 0 && (
+                <p className="text-sm text-on-surface-variant">No applications found.</p>
+              )}
             </div>
 
             {/* Sidebar (span 4) */}
@@ -173,7 +220,7 @@ export default function MyApplications() {
                     <p className="text-xs font-bold text-primary uppercase tracking-wide">Update Summary</p>
                   </div>
                   <p className="text-sm leading-relaxed text-on-primary-fixed-variant">
-                    You currently have <span className="font-bold text-primary">3 active</span> applications and 1 recently updated status.
+                    You currently have <span className="font-bold text-primary">{activeApplicationsCount} active</span> applications and {shortlistedCount} shortlisted.
                   </p>
                 </div>
               </div>
@@ -188,7 +235,9 @@ export default function MyApplications() {
                 </div>
                 <h4 className="text-xl font-bold mb-2 font-headline">Recent Activity</h4>
                 <p className="text-white/90 text-sm mb-6 leading-relaxed">
-                  Visual Arts Residency 2024 moved to <span className="font-bold">Shortlisted</span>. Last updated Oct 16, 2023
+                  {applications[0]
+                    ? `${applications[0].title} is currently ${applications[0].status}.`
+                    : 'Your latest registration updates will appear here.'}
                 </p>
                 <button className="w-full py-3 bg-white text-primary rounded-full font-bold text-sm hover:shadow-lg transition-shadow">
                   View Details
