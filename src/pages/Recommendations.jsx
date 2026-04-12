@@ -1,12 +1,16 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
+import { getAllCommittees } from '../api/committeeApi'
+import { getAllEvents } from '../api/eventApi'
+import * as authApi from '../api/authApi'
 
-const clubs = [
-  ['Visual Arts', 'The Minimalist Collective', 'A community focused on reductive design principles and high-fidelity aesthetics.', 'Why: Matches interest in UI Design', 'brush', 'bg-primary-fixed text-primary'],
-  ['Dev & Tech', 'Frontend Artisans', 'Crafting pixel-perfect experiences with modern frameworks and smooth interactions.', 'Why: Based on React skill', 'terminal', 'bg-secondary-fixed text-secondary'],
-  ['Strategy', 'Cognitive Systems Lab', 'Exploring the intersection of human psychology and digital product hierarchy.', 'Why: Alignment with Psychology Major', 'psychology', 'bg-tertiary-fixed text-tertiary'],
-  ['Motion', 'Dynamic Motion Studio', 'Mastering the art of transition, timing, and storytelling through animation.', 'Why: Suggested by Search History', 'movie', 'bg-primary-fixed text-primary'],
+const defaultClubs = [
+  ['Visual Arts', 'The Minimalist Collective', 'A community focused on reductive design principles and high-fidelity aesthetics.', 'Why: Matches interest in UI Design', 'brush', 'bg-primary-fixed text-primary', null, null],
+  ['Dev & Tech', 'Frontend Artisans', 'Crafting pixel-perfect experiences with modern frameworks and smooth interactions.', 'Why: Based on React skill', 'terminal', 'bg-secondary-fixed text-secondary', null, null],
+  ['Strategy', 'Cognitive Systems Lab', 'Exploring the intersection of human psychology and digital product hierarchy.', 'Why: Alignment with Psychology Major', 'psychology', 'bg-tertiary-fixed text-tertiary', null, null],
+  ['Motion', 'Dynamic Motion Studio', 'Mastering the art of transition, timing, and storytelling through animation.', 'Why: Suggested by Search History', 'movie', 'bg-primary-fixed text-primary', null, null],
 ]
 
 const people = [
@@ -15,8 +19,143 @@ const people = [
   ['92% Match', 'Julian Koster', 'Committee Head', ['Branding', 'Editorial', 'Creative Strategy'], 'https://lh3.googleusercontent.com/aida-public/AB6AXuDdEi69R4ul3tYdOqmhBknJ4pDkn8-CPmXRgF0dTBtyBswF3ZVlPoYTYYs_3bbCzb-HLg73N4-DC5-YSaqbb4KscLkG7p4GzpDHa6WpF9iL81AmlNveuf9aGE6SEN_0SnoFkGz4XgvE8t6y007kE413Ev1MF5A2lpp1YR6cMkl_hMCTnMup96AuLdfrSmCz1FNBJQD0IijQqti7nc8Xk6b9peklpKrlUZ8vKZyT1p68DkLmtVOvm5qi5RtOjZPNJ0vxDcSsFyEg5Io', false],
 ]
 
+const clubTones = [
+  'bg-primary-fixed text-primary',
+  'bg-secondary-fixed text-secondary',
+  'bg-tertiary-fixed text-tertiary',
+  'bg-primary-fixed text-primary',
+]
+
+const clubIcons = ['brush', 'terminal', 'psychology', 'movie']
+
+const normalizeCommittees = response => {
+  if (Array.isArray(response)) {
+    return response
+  }
+
+  if (Array.isArray(response?.data)) {
+    return response.data
+  }
+
+  if (Array.isArray(response?.committees)) {
+    return response.committees
+  }
+
+  if (Array.isArray(response?.data?.committees)) {
+    return response.data.committees
+  }
+
+  return []
+}
+
+const normalizeEvents = response => {
+  const raw = response?.data?.data || response?.data?.events || response?.data || response?.events || []
+  return Array.isArray(raw) ? raw : []
+}
+
+const normalizeStudent = response => {
+  if (!response) {
+    return null
+  }
+
+  return response?.data?.student || response?.data?.user || response?.data || response?.student || response?.user || response
+}
+
+const getStoredStudent = () => ({
+  id: localStorage.getItem('studentId') || localStorage.getItem('userId') || localStorage.getItem('id') || '',
+  name: localStorage.getItem('userName') || '',
+  email: localStorage.getItem('userEmail') || '',
+  interests: JSON.parse(localStorage.getItem('userInterests') || '[]'),
+})
+
+const getStudentId = student =>
+  student?.id || student?._id || student?.studentId || student?.student_id || student?.userId || localStorage.getItem('studentId') || localStorage.getItem('userId') || localStorage.getItem('id') || ''
+
+const buildRecommendationReason = (committee, student, relatedEvent) => {
+  const interests = Array.isArray(student?.interests) ? student.interests : []
+
+  if (interests.length > 0) {
+    return `Why: Matches interest in ${interests[0]}`
+  }
+
+  if (committee?.tagline) {
+    return `Why: ${committee.tagline}`
+  }
+
+  if (relatedEvent?.event_name) {
+    return `Why: Related to ${relatedEvent.event_name}`
+  }
+
+  return 'Why: Recommended for your profile'
+}
+
+const buildRecommendedClubs = (committees, events, student) => {
+  if (!Array.isArray(committees) || committees.length === 0) {
+    return defaultClubs
+  }
+
+  return committees.slice(0, 4).map((committee, index) => {
+    const committeeId = committee.id || committee._id || null
+    const relatedEvent = Array.isArray(events)
+      ? events.find(event => {
+          const eventCommitteeId = event?.committee?.id || event?.committee?._id || event?.committeeId || event?.committee_id
+          return committeeId && eventCommitteeId && String(eventCommitteeId) === String(committeeId)
+        })
+      : null
+
+    return [
+      committee.category || committee.domain || committee.committee_type || 'Club',
+      committee.committee_name || committee.name || 'Committee',
+      committee.description || 'No description available.',
+      buildRecommendationReason(committee, student, relatedEvent),
+      clubIcons[index % clubIcons.length],
+      clubTones[index % clubTones.length],
+      committeeId,
+      relatedEvent?.id || relatedEvent?._id || null,
+    ]
+  })
+}
+
 export default function Recommendations() {
-  const userName = localStorage.getItem('userName') || 'Student'
+  const [clubs, setClubs] = useState(defaultClubs)
+  const [student, setStudent] = useState(getStoredStudent())
+  const [loading, setLoading] = useState(true)
+  const userName = student?.name || student?.fullName || localStorage.getItem('userName') || 'Student'
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      setLoading(true)
+
+      const storedStudent = getStoredStudent()
+      const storedStudentId = getStudentId(storedStudent)
+      const studentFetcher =
+        authApi.getStudent ||
+        authApi.getStudentById ||
+        authApi.getStudentProfile ||
+        authApi.getCurrentStudent
+
+      try {
+        const [committeesRes, eventsRes, studentRes] = await Promise.all([
+          getAllCommittees(),
+          getAllEvents(),
+          studentFetcher ? studentFetcher(storedStudentId) : Promise.resolve(storedStudent),
+        ])
+
+        const committees = normalizeCommittees(committeesRes)
+        const events = normalizeEvents(eventsRes)
+        const resolvedStudent = normalizeStudent(studentRes) || storedStudent
+
+        setStudent(resolvedStudent)
+        setClubs(buildRecommendedClubs(committees, events, resolvedStudent))
+      } catch (error) {
+        console.error('Failed to load recommendations:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRecommendations()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
@@ -51,8 +190,8 @@ export default function Recommendations() {
             <button className="text-sm font-bold text-primary">View all clubs</button>
           </div>
           <div className="flex gap-6 overflow-x-auto pb-4">
-            {clubs.map(([category, title, description, reason, icon, tone]) => (
-              <article key={title} className="min-w-[20rem] rounded-[28px] bg-white p-6 editorial-shadow transition-transform hover:-translate-y-1">
+            {clubs.map(([category, title, description, reason, icon, tone, committeeId]) => (
+              <article key={committeeId || title} className="min-w-[20rem] rounded-[28px] bg-white p-6 editorial-shadow transition-transform hover:-translate-y-1">
                 <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${tone}`}>
                   <span className="material-symbols-outlined text-3xl">{icon}</span>
                 </div>
@@ -63,7 +202,7 @@ export default function Recommendations() {
                   <span className="rounded-full bg-secondary-fixed px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-on-secondary-fixed-variant">{reason}</span>
                 </div>
                 <Link
-                  to="/committee-detail"
+                  to={committeeId ? `/committee-detail/${committeeId}` : '/committee-detail'}
                   className="mt-6 block w-full rounded-full bg-surface-container-low py-3 text-center text-xs font-bold uppercase tracking-[0.2em] text-primary transition-colors hover:bg-primary-fixed"
                 >
                   Explore Club
