@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginStudent, signupStudent } from '../api/authApi'
+import { adminLogin, loginStudent, signupStudent } from '../api/authApi'
 
 export default function SignUpLogin() {
   const [activeTab, setActiveTab] = useState('signup')
+  const [loginRole, setLoginRole] = useState('student')
   const [signupForm, setSignupForm] = useState({
     sapId: '',
     fullName: '',
@@ -74,14 +75,32 @@ export default function SignUpLogin() {
         return
       }
 
+      if (loginRole === 'admin') {
+        const res = await adminLogin({
+          email: loginForm.email,
+          password: loginForm.password,
+        })
+
+        if (res.success) {
+          localStorage.setItem('token', res.token)
+          localStorage.setItem('role', 'admin')
+          navigate('/admin-dashboard')
+        } else {
+          alert('Login failed')
+        }
+
+        return
+      }
+
       const response = await loginStudent({
         email: loginForm.email,
         password: loginForm.password,
       })
+      const payload = response.data || {}
 
-      const token = response.data?.token || response.data?.accessToken
-      const userName = response.data?.name || response.data?.user?.name || response.data?.fullName || response.data?.user?.fullName
-      const userEmail = response.data?.email || response.data?.user?.email
+      const token = payload.token || payload.accessToken
+      const userName = payload.name || payload.user?.name || payload.fullName || payload.user?.fullName
+      const userEmail = payload.email || payload.user?.email
 
       if (token) {
         localStorage.setItem('token', token)
@@ -202,6 +221,36 @@ export default function SignUpLogin() {
             </p>
           </div>
 
+          {activeTab === 'login' && (
+            <div className="mb-6 rounded-[24px] bg-surface-container-lowest p-2 shadow-ambient">
+              <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.24em] text-on-surface-variant">Sign in as</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginRole('student')}
+                  className={`rounded-full px-4 py-3 text-sm font-bold transition ${
+                    loginRole === 'student'
+                      ? 'bg-primary text-white'
+                      : 'bg-transparent text-on-surface-variant hover:bg-surface-container-low'
+                  }`}
+                >
+                  Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginRole('admin')}
+                  className={`rounded-full px-4 py-3 text-sm font-bold transition ${
+                    loginRole === 'admin'
+                      ? 'bg-primary text-white'
+                      : 'bg-transparent text-on-surface-variant hover:bg-surface-container-low'
+                  }`}
+                >
+                  Admin
+                </button>
+              </div>
+            </div>
+          )}
+
           <form className="space-y-4" onSubmit={handleSubmit}>
             {activeTab === 'signup' && (
               <>
@@ -259,7 +308,9 @@ export default function SignUpLogin() {
                   : 'Signing In...'
                 : activeTab === 'signup'
                   ? 'Create Account'
-                  : 'Sign In'}
+                  : loginRole === 'admin'
+                    ? 'Sign In as Admin'
+                    : 'Sign In'}
             </button>
           </form>
 
