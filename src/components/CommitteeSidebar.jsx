@@ -1,13 +1,51 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import MaterialIcon from './MaterialIcon'
 
-const committeeNav = [
-  { to: '/committee-dashboard', icon: 'dashboard', label: 'Dashboard' },
-  { to: '/committee/profile', icon: 'person', label: 'Profile' },
-  { to: '/events/new', icon: 'event', label: 'Events', filled: true },
-]
-
 export default function CommitteeSidebar() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const storedCommitteeId = localStorage.getItem('committeeId')
+  const committeeId = id || storedCommitteeId
+  const basePath = committeeId ? `/committee/${committeeId}` : '/committee-dashboard'
+
+  const committeeNav = [
+    {
+      key: 'dashboard',
+      path: basePath,
+      icon: 'dashboard',
+      label: 'Dashboard',
+      filled: true,
+      isActive: location.pathname === basePath,
+    },
+    {
+      key: 'applications',
+      path: committeeId ? `${basePath}/applications` : '/applications',
+      icon: 'description',
+      label: 'Applications',
+      isActive: committeeId
+        ? location.pathname.includes(`${basePath}/applications`)
+        : location.pathname.includes('/applications'),
+    },
+    {
+      key: 'events',
+      path: committeeId ? `${basePath}/events` : '/events/new',
+      icon: 'event',
+      filled: true,
+      label: 'Events',
+      isActive: committeeId
+        ? location.pathname.includes(`${basePath}/events`) || location.pathname.startsWith('/events/edit') || location.pathname === '/events/new'
+        : location.pathname === '/events/new',
+    },
+    {
+      key: 'profile',
+      path: '/committee/profile/edit',
+      icon: 'person',
+      label: 'Committee Profile',
+      isActive: location.pathname.includes('/committee/profile'),
+    },
+  ]
+
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col bg-[#f4f3fa] px-6 py-8 lg:flex">
       <div className="mb-12 px-2">
@@ -26,32 +64,31 @@ export default function CommitteeSidebar() {
 
       <nav className="space-y-2">
         {committeeNav.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold transition-all ${
-                isActive
-                  ? 'bg-white text-primary shadow-sm'
-                  : 'text-on-surface-variant hover:translate-x-1 hover:text-primary'
-              }`
-            }
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => navigate(item.path)}
+            className={`flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold transition-all ${
+              item.isActive
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-on-surface-variant hover:translate-x-1 hover:text-primary'
+            }`}
           >
-            {({ isActive }) => (
-              <>
-                <MaterialIcon filled={isActive && item.filled}>{item.icon}</MaterialIcon>
-                <span>{item.label}</span>
-              </>
-            )}
-          </NavLink>
+            <MaterialIcon filled={item.isActive && item.filled}>{item.icon}</MaterialIcon>
+            <span>{item.label}</span>
+          </button>
         ))}
       </nav>
 
-      <button className="gradient-pill mt-auto rounded-full px-6 py-4 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.02]">
+      <button
+        type="button"
+        onClick={() => navigate('/events/new')}
+        className="gradient-pill mt-auto rounded-full px-6 py-4 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
+      >
         New Event
       </button>
 
-      <Link to="/committee/profile" className="mt-8 flex items-center gap-3 border-t border-outline-variant/20 pt-6">
+      <Link to="/committee/profile/edit" className="mt-8 flex items-center gap-3 border-t border-outline-variant/20 pt-6">
         <img
           className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/10"
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlnMwMiijKv4SJYQ2_QLTHTAtBMGIIcsK_eIZFsEjO22G7PNZNaEemJvklXWhRzpTu7BbQdL3IS8dKkSEVZXMtLYv0tV_z3EwtyGj86ss0fDXNlY5J9Oe7kwgRs5Q0H1pbzlOMduQGuWiwtoYGWa1QKvqkRdfBRI7hILUxI1FLP05GSkj77_bLGakapEmdHcNzlf7T7Ju6lPSMIux-6N5yEBzkN5K_uc11oPeQV67J4pDbaEU1QrCT2SscFxRQ5LPiwjNDhmv3Acg"

@@ -1,8 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
 import { useToast } from '../components/ToastProvider'
-import { addHeadToCommittee, addMemberToCommittee } from '../api/committeeApi'
+import {
+  addHeadToCommittee,
+  addMemberToCommittee,
+  deleteHeadFromCommittee,
+  deleteMemberFromCommittee,
+  getCommitteeById,
+  getCommitteeHeads,
+  getCommitteeMembers,
+  updateCommittee,
+} from '../api/committeeApi'
 
 const opportunityCards = [
   {
@@ -21,16 +30,93 @@ const opportunityCards = [
   },
 ]
 
+const initialDescription = `The Creative Guild is a multidisciplinary committee dedicated to bridging the gap between academic theory and artistic practice. Founded in 2021, we have grown into a vibrant community of over 50 mentors and students.
+
+Our primary activities include:
+- Weekly design critiques and collaborative workshops.
+- Annual "Spectrum" showcase highlighting student projects.
+- Partnership with local galleries for professional exhibitions.
+- Mentorship programs pairing senior leads with aspiring creators.
+
+We believe that creativity is a skill that can be nurtured through a supportive environment and consistent feedback loops. Our mission is to provide the resources and network necessary for every member to flourish.`
+
 export default function CommitteeProfileEdit() {
   const location = useLocation()
   const { showToast } = useToast()
   const committeeId = location.state?.committeeId || localStorage.getItem('committeeId') || ''
+  const [committeeData, setCommitteeData] = useState({
+    committee_name: 'The Creative Guild',
+    tagline: 'Cultivating artistic excellence through collaboration',
+    description: initialDescription,
+    start_year: '',
+  })
+  const [members, setMembers] = useState([])
+  const [heads, setHeads] = useState([])
+  const [loading, setLoading] = useState(false)
   const [memberId, setMemberId] = useState('')
   const [headForm, setHeadForm] = useState({
     headId: '',
     role_title: '',
     role_type: 'CORE',
   })
+
+  const loadCommitteeDetails = async () => {
+    if (!committeeId) {
+      return
+    }
+
+    const response = await getCommitteeById(committeeId)
+
+    setCommitteeData(prev => ({
+      ...prev,
+      committee_name: response?.name || response?.committee_name || prev.committee_name,
+      tagline: response?.tagline || prev.tagline,
+      description: response?.description || prev.description,
+      start_year: response?.startYear || response?.start_year || prev.start_year,
+    }))
+  }
+
+  const loadCommitteeMembers = async () => {
+    if (!committeeId) {
+      return
+    }
+
+    const response = await getCommitteeMembers(committeeId)
+    setMembers(Array.isArray(response) ? response : [])
+  }
+
+  const loadCommitteeHeads = async () => {
+    if (!committeeId) {
+      return
+    }
+
+    const response = await getCommitteeHeads(committeeId)
+    setHeads(Array.isArray(response) ? response : [])
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!committeeId) {
+        return
+      }
+
+      setLoading(true)
+
+      try {
+        await Promise.all([
+          loadCommitteeDetails(),
+          loadCommitteeMembers(),
+          loadCommitteeHeads(),
+        ])
+      } catch (error) {
+        showToast(error?.response?.data?.message || 'Failed to load committee data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [committeeId, showToast])
 
   const handleAddMember = async event => {
     event.preventDefault()
@@ -50,6 +136,7 @@ export default function CommitteeProfileEdit() {
         committeeId,
         memberId: memberId.trim(),
       })
+      await loadCommitteeMembers()
       showToast('Member added successfully')
       setMemberId('')
     } catch (error) {
@@ -87,6 +174,7 @@ export default function CommitteeProfileEdit() {
         role_title: headForm.role_title.trim(),
         role_type: headForm.role_type.trim(),
       })
+      await loadCommitteeHeads()
       showToast('Head added successfully')
       setHeadForm({
         headId: '',
@@ -98,7 +186,78 @@ export default function CommitteeProfileEdit() {
     }
   }
 
-  const buttonsDisabled = !committeeId
+  const handleDeleteMember = async memberIdToDelete => {
+    if (!committeeId) {
+      showToast('Committee ID unavailable')
+      return
+    }
+
+    if (!memberIdToDelete) {
+      showToast('Member ID is required')
+      return
+    }
+
+    try {
+      await deleteMemberFromCommittee({
+        committeeId,
+        memberId: memberIdToDelete,
+      })
+      await loadCommitteeMembers()
+      showToast('Member deleted successfully')
+    } catch (error) {
+      showToast(error?.response?.data?.message || 'Failed to delete member')
+    }
+  }
+
+  const handleDeleteHead = async headIdToDelete => {
+    if (!committeeId) {
+      showToast('Committee ID unavailable')
+      return
+    }
+
+    if (!headIdToDelete) {
+      showToast('Head ID is required')
+      return
+    }
+
+    try {
+      await deleteHeadFromCommittee({
+        committeeId,
+        headId: headIdToDelete,
+      })
+      await loadCommitteeHeads()
+      showToast('Head deleted successfully')
+    } catch (error) {
+      showToast(error?.response?.data?.message || 'Failed to delete head')
+    }
+  }
+
+  const handleSaveChanges = async () => {
+    if (!committeeId) {
+      showToast('Committee ID unavailable')
+      return
+    }
+
+    try {
+      await updateCommittee(committeeId, {
+        committee_name: committeeData.committee_name.trim(),
+        tagline: committeeData.tagline.trim(),
+        description: committeeData.description.trim(),
+        start_year: committeeData.start_year,
+      })
+      await loadCommitteeDetails()
+      showToast('Committee updated successfully')
+    } catch (error) {
+      showToast(error?.response?.data?.message || 'Failed to update committee')
+    }
+  }
+
+  const buttonsDisabled = !committeeId || loading
+
+  void members
+  void heads
+  void handleDeleteMember
+  void handleDeleteHead
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -115,7 +274,7 @@ export default function CommitteeProfileEdit() {
               <span className="material-symbols-outlined">settings</span>
             </button>
           </div>
-          <button className="rounded-full bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95" type="button">
+          <button className="rounded-full bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95" type="button" onClick={handleSaveChanges} disabled={buttonsDisabled}>
             Save Changes
           </button>
         </div>
@@ -152,8 +311,8 @@ export default function CommitteeProfileEdit() {
                   </button>
                 </div>
                 <div className="pb-2">
-                  <h3 className="text-3xl font-extrabold tracking-tight">The Creative Guild</h3>
-                  <p className="font-medium text-on-surface-variant">Design &amp; Arts Committee</p>
+                  <h3 className="text-3xl font-extrabold tracking-tight">{committeeData.committee_name}</h3>
+                  <p className="font-medium text-on-surface-variant">{committeeData.tagline}</p>
                 </div>
               </div>
             </section>
@@ -167,7 +326,8 @@ export default function CommitteeProfileEdit() {
                     <input
                       className="w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary"
                       type="text"
-                      defaultValue="The Creative Guild"
+                      value={committeeData.committee_name}
+                      onChange={event => setCommitteeData(prev => ({ ...prev, committee_name: event.target.value }))}
                     />
                   </div>
                   <div>
@@ -175,7 +335,8 @@ export default function CommitteeProfileEdit() {
                     <input
                       className="w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary"
                       type="text"
-                      defaultValue="Cultivating artistic excellence through collaboration"
+                      value={committeeData.tagline}
+                      onChange={event => setCommitteeData(prev => ({ ...prev, tagline: event.target.value }))}
                     />
                   </div>
                   <div>
@@ -196,7 +357,7 @@ export default function CommitteeProfileEdit() {
                   <p className="font-headline text-lg font-semibold leading-snug">
                     "Art is not what you see, but what you make others see."
                   </p>
-                  <p className="mt-4 text-sm opacity-70">â€” Edgar Degas</p>
+                  <p className="mt-4 text-sm opacity-70">Ã¢â‚¬â€ Edgar Degas</p>
                 </div>
                 <div className="absolute -bottom-4 -right-4 opacity-10">
                   <span className="material-symbols-outlined text-9xl">palette</span>
@@ -211,15 +372,8 @@ export default function CommitteeProfileEdit() {
                 <textarea
                   className="w-full resize-none rounded-xl border-none bg-surface-container-low px-6 py-5 text-sm leading-relaxed transition-all focus:bg-white focus:ring-2 focus:ring-primary"
                   rows="14"
-                  defaultValue={`The Creative Guild is a multidisciplinary committee dedicated to bridging the gap between academic theory and artistic practice. Founded in 2021, we have grown into a vibrant community of over 50 mentors and students.
-
-Our primary activities include:
-â€¢ Weekly design critiques and collaborative workshops.
-â€¢ Annual "Spectrum" showcase highlighting student projects.
-â€¢ Partnership with local galleries for professional exhibitions.
-â€¢ Mentorship programs pairing senior leads with aspiring creators.
-
-We believe that creativity is a skill that can be nurtured through a supportive environment and consistent feedback loops. Our mission is to provide the resources and network necessary for every member to flourish.`}
+                  value={committeeData.description}
+                  onChange={event => setCommitteeData(prev => ({ ...prev, description: event.target.value }))}
                 />
                 <div className="mt-4 flex items-center gap-2 text-xs text-on-surface-variant">
                   <span className="material-symbols-outlined text-xs">info</span>

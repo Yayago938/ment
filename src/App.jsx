@@ -6,10 +6,13 @@ import CommitteeDetail from './pages/CommitteeDetail'
 import CommitteeProfile from './pages/CommitteeProfile'
 import CommitteeProfileEdit from './pages/CommitteeProfileEdit'
 import CreateEvent from './pages/CreateEvent'
+import CommitteeEvents from './pages/CommitteeEvents'
 import ApplicationTracker from './pages/ApplicationTracker'
+import EditEvent from './pages/EditEvent'
 import EditStudentProfile from './pages/EditStudentProfile'
 import EventDetails from './pages/EventDetails'
 import EventRegistration from './pages/EventRegistration'
+import EventRegistrations from './pages/EventRegistrations'
 import ExploreCommunities from './pages/ExploreCommunities'
 import FindingMatches from './pages/FindingMatches'
 import InterestsQuestionnaire from './pages/InterestsQuestionnaire'
@@ -41,7 +44,7 @@ export default function App() {
       <Route
         path="/committee/profile"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role="committee">
             <CommitteeProfile />
           </ProtectedRoute>
         }
@@ -49,7 +52,7 @@ export default function App() {
       <Route
         path="/committee/profile/edit"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role="committee">
             <CommitteeProfileEdit />
           </ProtectedRoute>
         }
@@ -61,11 +64,19 @@ export default function App() {
       <Route path="/events/portfolio-review" element={<EventDetails />} />
       <Route path="/events/:id" element={<EventDetails />} />
       <Route path="/events/register" element={<EventRegistration />} />
+      <Route
+        path="/events/:eventId/registrations"
+        element={
+          <ProtectedRoute role="committee">
+            <EventRegistrations />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/notifications" element={<Notifications />} />
       <Route
         path="/committee/notifications"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role="committee">
             <Notifications variant="committee" />
           </ProtectedRoute>
         }
@@ -80,7 +91,7 @@ export default function App() {
       <Route
         path="/committee-dashboard"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role="committee">
             <CommitteeDashboard />
           </ProtectedRoute>
         }
@@ -88,16 +99,48 @@ export default function App() {
       <Route
         path="/committee/:id"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role="committee">
             <CommitteeDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/committee/:id/events"
+        element={
+          <ProtectedRoute role="committee">
+            <CommitteeEvents />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/committee/:id/applications"
+        element={
+          <ProtectedRoute role="committee">
+            <MyApplications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/committee/:id/profile"
+        element={
+          <ProtectedRoute role="committee">
+            <CommitteeProfile />
           </ProtectedRoute>
         }
       />
       <Route
         path="/events/new"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role="committee">
             <CreateEvent />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/events/edit/:eventId"
+        element={
+          <ProtectedRoute role="committee">
+            <EditEvent />
           </ProtectedRoute>
         }
       />
