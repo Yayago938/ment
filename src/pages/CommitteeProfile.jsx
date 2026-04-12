@@ -9,6 +9,8 @@ const highlights = [
 ]
 
 export default function CommitteeProfile() {
+  const committeeId = localStorage.getItem('committeeId') || ''
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <CommitteeSidebar />
@@ -34,7 +36,11 @@ export default function CommitteeProfile() {
                 <p className="mt-2 text-on-surface-variant">Elite community for design, storytelling, and digital craft.</p>
               </div>
             </div>
-            <Link to="/committee/profile/edit" className="rounded-full border border-outline-variant px-6 py-3 text-sm font-bold text-primary">
+            <Link
+              to="/committee/profile/edit"
+              state={committeeId ? { committeeId } : undefined}
+              className="rounded-full border border-outline-variant px-6 py-3 text-sm font-bold text-primary"
+            >
               Edit
             </Link>
           </div>

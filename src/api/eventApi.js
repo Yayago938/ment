@@ -6,3 +6,6 @@ export const createEvent = async (data) => {
 };
 
 export const getAllEvents = () => api.get("/events/getAllEvents");
+
+export const getEventById = (eventId) =>
+  api.post("https://mentorlink-production.up.railway.app/events/getEvent", { eventId });

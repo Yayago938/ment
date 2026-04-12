@@ -17,22 +17,6 @@ const applications = [
   ['Jordan Hayes', 'Applied for Brand Ambassador', 'New', 'https://lh3.googleusercontent.com/aida-public/AB6AXuDgjsRj2mhnkefo3PQCbHBzxfph4MQBVPNHkGq7G1RhXsEBcqNIpvIuLZzgKGHgeDeyGYjd2GFpayE9L8fc-2TL52Lwwx_TXPr4cZO6zBHIW-m_hS1k9BDL-7UIDw2iWvh6W-tqYmIdoTj7ZzIA6YPg-WEyCWv8AohCvJkxnDS_3lZDkbJbalpbXeejgk70EaWBSpoytKA3EoKPVFBXn5k6Ov-45VLFr3VN50IZ_7J3E3FrfW8B8ZO21RM2pUKHlAPThzSmobHftvI', 'bg-primary-fixed text-on-primary-fixed-variant'],
 ]
 
-const normalizeCommittee = response => {
-  if (response?.data && !Array.isArray(response.data)) {
-    return response.data
-  }
-
-  if (response?.committee) {
-    return response.committee
-  }
-
-  if (response?.data?.committee) {
-    return response.data.committee
-  }
-
-  return response
-}
-
 export default function CommitteeDashboard() {
   const { id } = useParams()
   const [committee, setCommittee] = useState(null)
@@ -44,13 +28,15 @@ export default function CommitteeDashboard() {
       return
     }
 
+    localStorage.setItem('committeeId', id)
+
     const loadCommittee = async () => {
       setLoadingCommittee(true)
       setErrorMessage('')
 
       try {
         const response = await getCommitteeById(id)
-        setCommittee(normalizeCommittee(response))
+        setCommittee(response)
       } catch (error) {
         setErrorMessage(error.response?.data?.message || 'Unable to load committee details.')
       } finally {
@@ -62,12 +48,12 @@ export default function CommitteeDashboard() {
   }, [id])
 
   const committeeData = useMemo(() => ({
-    committee_name: committee?.committee_name || 'Committee Dashboard',
+    committee_name: committee?.name || 'Committee Dashboard',
     tagline: committee?.tagline || 'Committee Lead Workspace',
     description: committee?.description || 'Use this dashboard to monitor committee performance, track applicants, and coordinate upcoming events.',
-    affiliated_faculty: committee?.affiliated_faculty || { name: 'Alex Rivera' },
-    start_year: committee?.start_year || '2024',
-    tags: Array.isArray(committee?.tags) ? committee.tags : [],
+    affiliated_faculty: { name: committee?.facultyName || 'Alex Rivera' },
+    start_year: committee?.startYear || '2024',
+    tags: Array.isArray(committee?.committeeHeads) && committee.committeeHeads.length > 0 ? ['Heads Listed'] : [],
   }), [committee])
 
   return (

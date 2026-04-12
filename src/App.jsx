@@ -59,6 +59,7 @@ export default function App() {
       <Route path="/student-dashboard" element={<StudentDashboard />} />
       <Route path="/explore" element={<ExploreCommunities />} />
       <Route path="/events/portfolio-review" element={<EventDetails />} />
+      <Route path="/events/:id" element={<EventDetails />} />
       <Route path="/events/register" element={<EventRegistration />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route

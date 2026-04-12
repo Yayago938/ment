@@ -112,12 +112,12 @@ export default function AdminDashboard() {
           {!isLoading && committees.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {committees.map((committee, index) => {
-                const committeeId = committee.id || committee._id
+                const committeeId = committee.id
 
                 return (
                   <button
                     type="button"
-                    key={committeeId || `${committee.committee_name}-${index}`}
+                    key={committeeId || `${committee.name}-${index}`}
                     onClick={() => committeeId && navigate(`/committee/${committeeId}`)}
                     className="group overflow-hidden rounded-[30px] bg-white text-left shadow-[0_22px_70px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 disabled:cursor-not-allowed"
                     disabled={!committeeId}
@@ -125,11 +125,11 @@ export default function AdminDashboard() {
                     <div className={`h-40 bg-gradient-to-br ${committeeGradients[index % committeeGradients.length]} p-6 text-white`}>
                       <div className="flex h-full flex-col justify-between">
                         <span className="w-fit rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white/90">
-                          {committee.start_year || 'New Committee'}
+                          {committee.startYear || 'New Committee'}
                         </span>
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/80">Faculty Lead</p>
-                          <p className="mt-2 text-lg font-bold">{committee.affiliated_faculty?.name || 'Faculty assignment pending'}</p>
+                          <p className="mt-2 text-lg font-bold">{committee.facultyName || 'Faculty assignment pending'}</p>
                         </div>
                       </div>
                     </div>
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
                     <div className="p-6">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h3 className="font-headline text-2xl font-extrabold text-slate-900">{committee.committee_name || 'Untitled Committee'}</h3>
+                          <h3 className="font-headline text-2xl font-extrabold text-slate-900">{committee.name || 'Untitled Committee'}</h3>
                           <p className="mt-2 text-sm font-medium text-primary">{committee.tagline || 'No tagline available'}</p>
                         </div>
                         <span className="material-symbols-outlined text-slate-300 transition group-hover:translate-x-1 group-hover:text-primary">arrow_forward</span>
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
                       </p>
 
                       <div className="mt-5 flex flex-wrap gap-2">
-                        {(committee.tags || []).slice(0, 3).map(tag => (
+                        {[committee.facultyName, committee.startYear ? `Since ${committee.startYear}` : ''].filter(Boolean).slice(0, 3).map(tag => (
                           <span key={tag} className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
                             {tag}
                           </span>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 import { deleteEventRegistration, getEventRegistrations } from '../api/eventRegistrationApi'
+import { useToast } from '../components/ToastProvider'
 
 const EVENT_ID = '8a35bc6b-6f2c-4b3e-a3f2-3c717553071b'
 
@@ -46,6 +47,7 @@ export default function MyApplications() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeFilter, setActiveFilter] = useState('All')
+  const { showToast } = useToast()
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -83,7 +85,7 @@ export default function MyApplications() {
       await deleteEventRegistration(registrationId)
       setApplications(prev => prev.filter(app => app.id !== registrationId))
     } catch (deleteError) {
-      alert(deleteError.response?.data?.message || 'Something went wrong')
+      showToast(deleteError.response?.data?.message || 'Something went wrong')
     }
   }
 

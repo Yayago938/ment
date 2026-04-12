@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
+import SaveItemButton from '../components/SaveItemButton'
+import ScheduleCalendarModal from '../components/ScheduleCalendarModal'
 import { getAllCommittees } from '../api/committeeApi'
 import { getAllEvents } from '../api/eventApi'
 
@@ -48,28 +50,13 @@ const formatEventDate = event => {
   }
 }
 
-const normalizeCommittees = response => {
-  if (Array.isArray(response)) {
-    return response
-  }
-
-  if (Array.isArray(response?.data)) {
-    return response.data
-  }
-
-  if (Array.isArray(response?.committees)) {
-    return response.committees
-  }
-
-  return []
-}
-
 export default function StudentDashboard() {
   const [events, setEvents] = useState([])
   const [committees, setCommittees] = useState([])
   const [loadingEvents, setLoadingEvents] = useState(true)
   const [loadingCommittees, setLoadingCommittees] = useState(true)
   const [dashboardError, setDashboardError] = useState('')
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const userName = localStorage.getItem('userName') || 'Student'
 
   useEffect(() => {
@@ -88,9 +75,8 @@ export default function StudentDashboard() {
         console.log('Student dashboard committees response:', committeesRes)
 
         const eventsRaw = eventsRes.data?.data || eventsRes.data?.events || eventsRes.data || []
-        const committeesRaw = normalizeCommittees(committeesRes)
         const safeEvents = Array.isArray(eventsRaw) ? eventsRaw : []
-        const safeCommittees = Array.isArray(committeesRaw) ? committeesRaw : []
+        const safeCommittees = Array.isArray(committeesRes) ? committeesRes : []
 
         setEvents(safeEvents)
         setCommittees(safeCommittees)
@@ -115,14 +101,14 @@ export default function StudentDashboard() {
     ]
 
     return {
-      id: event.id,
+      id: event.id || event._id || event.eventId || event.event_id,
       title: event.event_name || 'Untitled Event',
       detail: event.description || 'No description available',
       month: formattedDate.month,
       day: formattedDate.day,
       dateLabel: formattedDate.dateLabel,
       bg: tones[index % tones.length],
-      to: '/events/portfolio-review',
+      to: event.id || event._id || event.eventId || event.event_id ? `/events/${event.id || event._id || event.eventId || event.event_id}` : '/events/portfolio-review',
     }
   })
 
@@ -142,8 +128,8 @@ export default function StudentDashboard() {
 
   const mappedCommittees = committees.slice(0, 4).map((committee, index) => ({
     id: committee.id,
-    title: committee.committee_name || 'Committee',
-    subtitle: committee.tagline || 'Campus Committee',
+    title: committee.name || 'Committee',
+    subtitle: committee.tagline || '',
     description: committee.description || '',
     image: committee.image || committee.committee_image || clubPlaceholderImages[index % clubPlaceholderImages.length],
     to: committee.id ? `/committee-detail/${committee.id}` : '/committee-detail',
@@ -154,6 +140,47 @@ export default function StudentDashboard() {
     { icon: 'calendar_month', label: 'Upcoming Events', value: String(events.length).padStart(2, '0'), tone: 'text-secondary bg-secondary/10' },
     { icon: 'bookmarks', label: 'Saved Opportunities', value: '28', tone: 'text-tertiary bg-tertiary-fixed/40' },
   ]
+
+  const scheduleItems = useMemo(() => {
+    const upcomingEvents = events.flatMap(event => {
+      const eventId = event.id || event._id || event.eventId || event.event_id
+      const title = event.event_name || event.title || event.name || 'Untitled Event'
+      const venue = event.venue || event.location || event.event_location || 'Venue to be announced'
+      const items = []
+
+      if (event.event_date || event.date || event.startDate || event.start_date) {
+        items.push({
+          id: `${eventId || title}-event`,
+          type: 'event',
+          date: event.event_date || event.date || event.startDate || event.start_date,
+          title,
+          subtitle: venue,
+        })
+      }
+
+      if (event.registration_deadline) {
+        items.push({
+          id: `${eventId || title}-deadline`,
+          type: 'deadline',
+          date: event.registration_deadline,
+          title,
+          subtitle: 'Registration deadline',
+        })
+      }
+
+      return items
+    })
+
+    const interviews = applicationRows.map(([title, , date, status, nextStep]) => ({
+      id: `${title}-interview`,
+      type: status === 'Interviewing' ? 'interview' : null,
+      date,
+      title,
+      subtitle: nextStep,
+    })).filter(item => item.type)
+
+    return [...upcomingEvents, ...interviews]
+  }, [events])
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -175,8 +202,13 @@ export default function StudentDashboard() {
               Track applications, explore campus opportunities, and stay updated on upcoming events from your personal dashboard.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <button className="rounded-full bg-white px-6 py-3 text-sm font-bold text-primary shadow-lg">View Schedule</button>
-              <button className="rounded-full border border-white/30 bg-white/20 px-6 py-3 text-sm font-bold text-white backdrop-blur-sm">My Goals</button>
+              <button
+                type="button"
+                onClick={() => setIsScheduleOpen(true)}
+                className="rounded-full bg-white px-6 py-3 text-sm font-bold text-primary shadow-lg"
+              >
+                View Schedule
+              </button>
             </div>
           </div>
           <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
@@ -211,6 +243,9 @@ export default function StudentDashboard() {
               <div className="relative md:w-2/5">
                 <img className="h-full w-full object-cover" src={featuredEvent.image} alt={featuredEvent.title} />
                 <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white">Featured Event</div>
+                <div className="absolute right-4 top-4">
+                  <SaveItemButton itemKey={`event:${events[0]?.id || events[0]?._id || events[0]?.eventId || events[0]?.event_id || featuredEvent.title}`} className="bg-white text-on-surface-variant" />
+                </div>
               </div>
               <div className="p-8 md:w-3/5">
                 <h3 className="font-headline text-3xl font-extrabold">{featuredEvent.title}</h3>
@@ -238,21 +273,27 @@ export default function StudentDashboard() {
               )}
 
               {!loadingEvents && mappedEvents.map((event) => (
-                <Link
+                <article
                   key={event.id || event.title}
-                  to={event.to}
                   className="editorial-shadow flex items-center gap-4 rounded-[24px] border border-outline-variant/10 bg-white p-4 transition-transform hover:translate-x-1"
                 >
-                  <div className={`flex h-16 w-16 flex-col items-center justify-center rounded-2xl ${event.bg}`}>
-                    <span className="text-xs font-bold uppercase">{event.month}</span>
-                    <span className="font-headline text-xl font-extrabold">{event.day}</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold">{event.title}</h3>
-                    <p className="text-xs text-on-surface-variant">{event.detail}</p>
-                  </div>
-                  <MaterialIcon className="text-outline">chevron_right</MaterialIcon>
-                </Link>
+                  <Link
+                    to={event.to}
+                    state={event.id ? { eventId: event.id } : undefined}
+                    className="flex flex-1 items-center gap-4"
+                  >
+                    <div className={`flex h-16 w-16 flex-col items-center justify-center rounded-2xl ${event.bg}`}>
+                      <span className="text-xs font-bold uppercase">{event.month}</span>
+                      <span className="font-headline text-xl font-extrabold">{event.day}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold">{event.title}</h3>
+                      <p className="text-xs text-on-surface-variant">{event.detail}</p>
+                    </div>
+                    <MaterialIcon className="text-outline">chevron_right</MaterialIcon>
+                  </Link>
+                  <SaveItemButton itemKey={`event:${event.id || event.title}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
+                </article>
               ))}
 
               {!loadingEvents && mappedEvents.length === 0 && (
@@ -270,7 +311,10 @@ export default function StudentDashboard() {
             )}
 
             {!loadingCommittees && mappedCommittees.map((club) => (
-              <article key={club.id || club.title} className="editorial-shadow rounded-[28px] border border-outline-variant/10 bg-white p-6 text-center transition-transform hover:scale-[1.02]">
+              <article key={club.id || club.title} className="editorial-shadow relative rounded-[28px] border border-outline-variant/10 bg-white p-6 text-center transition-transform hover:scale-[1.02]">
+                <div className="absolute right-5 top-5">
+                  <SaveItemButton itemKey={`committee:${club.id || club.title}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
+                </div>
                 <div className="mx-auto mb-4 h-20 w-20 overflow-hidden rounded-full ring-4 ring-white">
                   <img className="h-full w-full object-cover" src={club.image} alt={club.title} />
                 </div>
@@ -280,7 +324,7 @@ export default function StudentDashboard() {
                   to={club.to}
                   className="mt-5 block w-full rounded-full border border-primary/20 py-2 text-center text-xs font-bold text-primary transition-colors hover:bg-primary/5"
                 >
-                  Join Club
+                  View Club
                 </Link>
               </article>
             ))}
@@ -331,6 +375,11 @@ export default function StudentDashboard() {
           </div>
         </section>
       </main>
+      <ScheduleCalendarModal
+        open={isScheduleOpen}
+        onClose={() => setIsScheduleOpen(false)}
+        items={scheduleItems}
+      />
     </div>
   )
 }

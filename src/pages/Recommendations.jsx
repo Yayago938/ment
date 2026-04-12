@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
+import SaveItemButton from '../components/SaveItemButton'
 import { getAllCommittees } from '../api/committeeApi'
 import { getAllEvents } from '../api/eventApi'
 import * as authApi from '../api/authApi'
@@ -27,26 +28,6 @@ const clubTones = [
 ]
 
 const clubIcons = ['brush', 'terminal', 'psychology', 'movie']
-
-const normalizeCommittees = response => {
-  if (Array.isArray(response)) {
-    return response
-  }
-
-  if (Array.isArray(response?.data)) {
-    return response.data
-  }
-
-  if (Array.isArray(response?.committees)) {
-    return response.committees
-  }
-
-  if (Array.isArray(response?.data?.committees)) {
-    return response.data.committees
-  }
-
-  return []
-}
 
 const normalizeEvents = response => {
   const raw = response?.data?.data || response?.data?.events || response?.data || response?.events || []
@@ -105,7 +86,7 @@ const buildRecommendedClubs = (committees, events, student) => {
 
     return [
       committee.category || committee.domain || committee.committee_type || 'Club',
-      committee.committee_name || committee.name || 'Committee',
+      committee.name || 'Committee',
       committee.description || 'No description available.',
       buildRecommendationReason(committee, student, relatedEvent),
       clubIcons[index % clubIcons.length],
@@ -141,7 +122,7 @@ export default function Recommendations() {
           studentFetcher ? studentFetcher(storedStudentId) : Promise.resolve(storedStudent),
         ])
 
-        const committees = normalizeCommittees(committeesRes)
+        const committees = Array.isArray(committeesRes) ? committeesRes : []
         const events = normalizeEvents(eventsRes)
         const resolvedStudent = normalizeStudent(studentRes) || storedStudent
 
@@ -191,7 +172,10 @@ export default function Recommendations() {
           </div>
           <div className="flex gap-6 overflow-x-auto pb-4">
             {clubs.map(([category, title, description, reason, icon, tone, committeeId]) => (
-              <article key={committeeId || title} className="min-w-[20rem] rounded-[28px] bg-white p-6 editorial-shadow transition-transform hover:-translate-y-1">
+              <article key={committeeId || title} className="relative min-w-[20rem] rounded-[28px] bg-white p-6 editorial-shadow transition-transform hover:-translate-y-1">
+                <div className="absolute right-5 top-5">
+                  <SaveItemButton itemKey={`committee:${committeeId || title}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
+                </div>
                 <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${tone}`}>
                   <span className="material-symbols-outlined text-3xl">{icon}</span>
                 </div>
@@ -223,6 +207,9 @@ export default function Recommendations() {
           <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
             {people.map(([match, name, role, skills, image, featured]) => (
               <article key={name} className="relative overflow-hidden rounded-[28px] bg-white p-8 editorial-shadow">
+                <div className="absolute left-4 top-4">
+                  <SaveItemButton itemKey={`person:${name}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
+                </div>
                 <div className="absolute right-4 top-4 rounded-full bg-primary-fixed px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary-fixed-variant">{match}</div>
                 <div className="mb-8 flex items-center gap-5">
                   <img className="h-20 w-20 rounded-full border-4 border-surface-container-low object-cover" src={image} alt={name} />

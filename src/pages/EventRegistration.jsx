@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import FloatingBackButton from '../components/FloatingBackButton'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 
@@ -10,6 +11,9 @@ const registrationPoints = [
 ]
 
 export default function EventRegistration() {
+  const location = useLocation()
+  const eventPath = location.state?.eventPath || (location.state?.eventId ? `/events/${location.state.eventId}` : '/explore')
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <StudentSidebar />
@@ -20,6 +24,7 @@ export default function EventRegistration() {
         userRole="Explorer"
         userImage="https://lh3.googleusercontent.com/aida-public/AB6AXuAICFf55z-CdTc8gQwA4MI1a4IGoNIhxjTw6BMIXZsDRx6NSMCt6Ilak1A4RCMvKXJR9S9Z0awqbNV-ZHzDeNviN91S1aNO7GHP_0GBTEtWadfFNbiUr4PtRFrVJTR92b649zjYYxEY6PD3jA9PP4NPn-CRe40umypDBNOzPj6xDjEjp0HICz3-qkWTdIsxCEXiabcSiLsG2Ow7fxk8ytqQUokTi_SQM0UNslagq5HGkd4ttHvEysuxpnF1RogXZ3g57o2sRE1GiL8"
       />
+      <FloatingBackButton fallbackTo={eventPath} />
 
       <main className="px-4 pb-16 pt-24 lg:ml-64 lg:px-10 lg:pt-28">
         <div className="mx-auto max-w-6xl">
@@ -65,7 +70,7 @@ export default function EventRegistration() {
                 </label>
 
                 <div className="md:col-span-2 flex flex-wrap gap-4 pt-2">
-                  <Link to="/events/portfolio-review" className="rounded-full border border-outline-variant px-8 py-3 font-bold text-primary">
+                  <Link to={eventPath} className="rounded-full border border-outline-variant px-8 py-3 font-bold text-primary">
                     Back to Event
                   </Link>
                   <button type="button" className="rounded-full bg-gradient-to-r from-primary to-secondary-container px-8 py-3 font-bold text-white shadow-[0_16px_32px_rgba(123,110,246,0.2)]">

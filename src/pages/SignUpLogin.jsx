@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminLogin, loginStudent, signupStudent } from '../api/authApi'
+import { useToast } from '../components/ToastProvider'
 
 export default function SignUpLogin() {
   const [activeTab, setActiveTab] = useState('signup')
@@ -16,8 +17,14 @@ export default function SignUpLogin() {
     email: '',
     password: '',
   })
+  const [showPasswords, setShowPasswords] = useState({
+    login: false,
+    signup: false,
+    confirm: false,
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
+  const { showToast } = useToast()
 
   const handleSignupChange = event => {
     const { name, value } = event.target
@@ -47,7 +54,7 @@ export default function SignUpLogin() {
     try {
       if (activeTab === 'signup') {
         if (signupForm.password !== signupForm.confirmPassword) {
-          alert('Passwords do not match')
+          showToast('Passwords do not match')
           return
         }
 
@@ -86,7 +93,7 @@ export default function SignUpLogin() {
           localStorage.setItem('role', 'admin')
           navigate('/admin-dashboard')
         } else {
-          alert('Login failed')
+          showToast('Login failed')
         }
 
         return
@@ -134,7 +141,7 @@ export default function SignUpLogin() {
             },
       )
 
-      alert(
+      showToast(
         error?.response?.data?.message ||
           error?.response?.data?.error ||
           JSON.stringify(error?.response?.data) ||
@@ -144,6 +151,13 @@ export default function SignUpLogin() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const togglePasswordVisibility = key => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
   }
 
   return (
@@ -283,7 +297,21 @@ export default function SignUpLogin() {
               <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Password</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">lock</span>
-                <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="password" placeholder="........" type="password" value={activeTab === 'signup' ? signupForm.password : loginForm.password} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
+                <input className="w-full pl-12 pr-12 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="password" placeholder="........" type={activeTab === 'signup' ? (showPasswords.signup ? 'text' : 'password') : (showPasswords.login ? 'text' : 'password')} value={activeTab === 'signup' ? signupForm.password : loginForm.password} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility(activeTab === 'signup' ? 'signup' : 'login')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors hover:text-on-surface"
+                  aria-label={activeTab === 'signup'
+                    ? (showPasswords.signup ? 'Hide password' : 'Show password')
+                    : (showPasswords.login ? 'Hide password' : 'Show password')}
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {activeTab === 'signup'
+                      ? (showPasswords.signup ? 'visibility_off' : 'visibility')
+                      : (showPasswords.login ? 'visibility_off' : 'visibility')}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -292,7 +320,17 @@ export default function SignUpLogin() {
                 <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Confirm Password</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">lock_reset</span>
-                  <input className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="confirmPassword" placeholder="........" type="password" value={signupForm.confirmPassword} onChange={handleSignupChange} />
+                  <input className="w-full pl-12 pr-12 py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface" name="confirmPassword" placeholder="........" type={showPasswords.confirm ? 'text' : 'password'} value={signupForm.confirmPassword} onChange={handleSignupChange} />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('confirm')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors hover:text-on-surface"
+                    aria-label={showPasswords.confirm ? 'Hide confirm password' : 'Show confirm password'}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {showPasswords.confirm ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
                 </div>
               </div>
             )}

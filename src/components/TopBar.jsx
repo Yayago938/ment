@@ -1,9 +1,24 @@
 import { Link } from 'react-router-dom'
 import MaterialIcon from './MaterialIcon'
 
+const buildAvatarFallback = name => {
+  const initials = (name || 'Student')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() || '')
+    .join('') || 'S'
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="#e8e2ff"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, sans-serif" font-size="34" font-weight="700" fill="#5545ce">${initials}</text></svg>`
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
 export default function TopBar({
   sidebar = 'student',
   placeholder,
+  searchValue,
+  onSearchChange,
   userName,
   userRole,
   userImage,
@@ -12,8 +27,13 @@ export default function TopBar({
   profileTo,
 }) {
   const storedUserName = localStorage.getItem('userName') || 'Student'
-  const resolvedUserName = userName || storedUserName
-  const resolvedUserRole = userRole || 'Student'
+  const storedUserRole = localStorage.getItem('userRoleLabel') || 'Student'
+  const storedUserImage = localStorage.getItem('userImage') || localStorage.getItem('profileImage') || ''
+  const resolvedUserName = sidebar === 'student' ? storedUserName : (userName || storedUserName)
+  const resolvedUserRole = sidebar === 'student' ? storedUserRole : (userRole || 'Student')
+  const resolvedUserImage = sidebar === 'student'
+    ? (storedUserImage || buildAvatarFallback(storedUserName))
+    : (userImage || storedUserImage || buildAvatarFallback(resolvedUserName))
   const resolvedNotificationsTo = notificationsTo || (sidebar === 'committee' ? '/committee/notifications' : '/notifications')
   const resolvedProfileTo = profileTo || (sidebar === 'committee' ? '/committee/profile' : '/profile')
   const contentOffset = sidebar === 'committee' ? 'lg:ml-64' : 'lg:pl-64'
@@ -32,6 +52,8 @@ export default function TopBar({
             className="w-full rounded-full border-none bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-primary/20"
             placeholder={placeholder}
             type="text"
+            value={searchValue ?? ''}
+            onChange={onSearchChange}
           />
         </div>
       </div>
@@ -65,7 +87,7 @@ export default function TopBar({
               {resolvedUserRole}
             </p>
           </div>
-          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white" src={userImage} alt={resolvedUserName} />
+          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white" src={resolvedUserImage} alt={resolvedUserName} />
         </Link>
       </div>
     </header>
