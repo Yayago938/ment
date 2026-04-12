@@ -1,12 +1,146 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
+import { createEvent } from '../api/eventApi'
+
+const initialQuestion = {
+  id: crypto.randomUUID(),
+  question: '',
+  type: 'text',
+  required: true,
+  optionsText: '',
+}
+
+const initialFormData = {
+  event_name: '',
+  description: '',
+  venue: '',
+  event_date: '',
+  event_time: '',
+  tags: '',
+  committeeId: '',
+  registration_deadline: '',
+  questions: [initialQuestion],
+}
+
+const buildRegistrationQuestions = questions =>
+  questions.map(({ id, question, type, required, optionsText }) => {
+    const payloadQuestion = {
+      id,
+      question: question.trim(),
+      type,
+      required,
+    }
+
+    if (type === 'select' || type === 'radio' || type === 'checkbox') {
+      payloadQuestion.options = optionsText
+        .split(',')
+        .map(option => option.trim())
+        .filter(Boolean)
+    }
+
+    return payloadQuestion
+  })
 
 export default function CreateEvent() {
+  const navigate = useNavigate()
+  const [formData, setFormData] = useState(initialFormData)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleChange = event => {
+    const { name, value } = event.target
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleQuestionChange = (id, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      questions: prev.questions.map(question =>
+        question.id === id
+          ? {
+              ...question,
+              [field]: value,
+            }
+          : question,
+      ),
+    }))
+  }
+
+  const addQuestion = () => {
+    setFormData(prev => ({
+      ...prev,
+      questions: [
+        ...prev.questions,
+        {
+          id: crypto.randomUUID(),
+          question: '',
+          type: 'text',
+          required: false,
+          optionsText: '',
+        },
+      ],
+    }))
+  }
+
+  const removeQuestion = id => {
+    setFormData(prev => ({
+      ...prev,
+      questions: prev.questions.length === 1
+        ? prev.questions
+        : prev.questions.filter(question => question.id !== id),
+    }))
+  }
+
+  const handleSubmit = async event => {
+    event.preventDefault()
+
+    if (isSubmitting) {
+      return
+    }
+
+    setIsSubmitting(true)
+    setErrorMessage('')
+
+    const payload = {
+      event_name: formData.event_name.trim(),
+      description: formData.description.trim(),
+      venue: formData.venue.trim(),
+      event_date: new Date(formData.event_date).toISOString(),
+      event_time: `${formData.event_time}:00`,
+      tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      committeeId: formData.committeeId.trim(),
+      registration_deadline: new Date(formData.registration_deadline).toISOString(),
+      registration_questions: buildRegistrationQuestions(formData.questions),
+    }
+
+    try {
+      console.log('EVENT PAYLOAD:', payload)
+
+      const res = await createEvent(payload)
+
+      console.log('EVENT CREATED:', res)
+
+      if (res.success) {
+        navigate('/committee-dashboard')
+      }
+    } catch (error) {
+      console.log('ERROR:', error.response?.data)
+      setErrorMessage(error.response?.data?.message || 'Unable to create event right now.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
-      <nav className="fixed top-0 left-0 z-50 flex h-20 w-full items-center justify-between bg-white/80 px-8 backdrop-blur-xl shadow-[0_20px_40px_rgba(123,110,246,0.08)]">
+      <nav className="fixed left-0 top-0 z-50 flex h-20 w-full items-center justify-between bg-white/80 px-8 shadow-[0_20px_40px_rgba(123,110,246,0.08)] backdrop-blur-xl">
         <div className="flex items-center gap-4">
-          <span className="font-headline text-2xl font-bold tracking-tight text-transparent bg-gradient-to-r from-[#7B6EF6] to-[#F6A6C1] bg-clip-text">
+          <span className="bg-gradient-to-r from-[#7B6EF6] to-[#F6A6C1] bg-clip-text font-headline text-2xl font-bold tracking-tight text-transparent">
             Aura Committee
           </span>
         </div>
@@ -23,21 +157,6 @@ export default function CreateEvent() {
               Profile
             </Link>
           </div>
-          <div className="flex items-center gap-4 border-l border-outline-variant/20 pl-6">
-            <Link className="text-on-surface-variant transition-colors hover:text-primary" to="/committee/notifications">
-              <span className="material-symbols-outlined">notifications</span>
-            </Link>
-            <button className="text-on-surface-variant transition-colors hover:text-primary" type="button">
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-            <Link className="h-10 w-10 overflow-hidden rounded-full border border-primary/10 bg-surface-container-high" to="/committee/profile">
-              <img
-                alt="Committee Member Profile"
-                className="h-full w-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5rOVxV3_MzejEy8yFw1urS2qdo-AMxbN4ibFLSNN1TnnjmQGhsQCmPdI4ALk3pl5NJvFkCIvdXftt8p6f3Qq1GO4-xy12RGOf1jWs9m2zFTqLHyQR79MwK2t77pYivdFk_n55N93YNibYdl-5Txe9HTHmDXuoxeXonhqJERwJtwTv-qYBqHkIFE-zxFei4D3BnEzSakFsLkC4xyxqW34JHABGVsGQ-4EH-josDbRZIIgrK0z-EK9w7Lmm1fFcgUjqRD3LuMHU2Qw"
-              />
-            </Link>
-          </div>
         </div>
       </nav>
 
@@ -51,16 +170,16 @@ export default function CreateEvent() {
               <p className="mt-2 text-lg text-on-surface-variant">Curate a new mentorship experience for the community.</p>
             </div>
             <div className="flex gap-4">
-              <button className="rounded-full border border-outline-variant/20 px-8 py-3 font-semibold text-primary transition-all hover:bg-primary/5" type="button">
+              <button className="rounded-full border border-outline-variant/20 px-8 py-3 font-semibold text-primary transition-all hover:bg-primary/5" type="button" onClick={() => navigate('/committee-dashboard')}>
                 Discard
               </button>
-              <button className="rounded-full bg-primary px-8 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02]" type="button">
-                Save Event
+              <button className="rounded-full bg-primary px-8 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02]" type="submit" form="create-event-form" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Event'}
               </button>
             </div>
           </header>
 
-          <form className="space-y-12" onSubmit={(event) => event.preventDefault()}>
+          <form id="create-event-form" className="space-y-12" onSubmit={handleSubmit}>
             <section className="rounded-xl bg-surface-container-low p-1">
               <div className="rounded-lg bg-surface-container-lowest p-8 shadow-sm">
                 <div className="mb-8 flex items-center gap-3">
@@ -71,31 +190,37 @@ export default function CreateEvent() {
                   <div className="md:col-span-2">
                     <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Event Title</label>
                     <input
+                      name="event_name"
+                      value={formData.event_name}
+                      onChange={handleChange}
                       className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface placeholder:text-outline transition-all focus:bg-white focus:ring-2 focus:ring-primary"
                       placeholder="e.g. Design Leadership Summit 2024"
                       type="text"
+                      required
                     />
                   </div>
                   <div>
                     <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Date</label>
-                    <input className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" type="date" />
+                    <input name="event_date" value={formData.event_date} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" type="date" required />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Start Time</label>
-                      <input className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" type="time" />
-                    </div>
-                    <div>
-                      <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">End Time</label>
-                      <input className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" type="time" />
-                    </div>
+                  <div>
+                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Start Time</label>
+                    <input name="event_time" value={formData.event_time} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" type="time" step="1" required />
                   </div>
                   <div className="md:col-span-2">
                     <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Location or Platform Link</label>
                     <div className="group relative">
                       <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-outline transition-colors group-focus-within:text-primary">location_on</span>
-                      <input className="w-full rounded-full border-none bg-surface-container-low py-4 pl-14 pr-6 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="Enter physical address or virtual meeting link" type="text" />
+                      <input name="venue" value={formData.venue} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low py-4 pl-14 pr-6 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="Enter physical address or virtual meeting link" type="text" required />
                     </div>
+                  </div>
+                  <div>
+                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Committee ID</label>
+                    <input name="committeeId" value={formData.committeeId} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="Committee UUID" type="text" required />
+                  </div>
+                  <div>
+                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Tags</label>
+                    <input name="tags" value={formData.tags} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="design, workshop, leadership" type="text" />
                   </div>
                 </div>
               </div>
@@ -108,83 +233,7 @@ export default function CreateEvent() {
                   <h2 className="text-xl font-bold tracking-tight">About the Event</h2>
                 </div>
                 <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Detailed Description</label>
-                <div className="overflow-hidden rounded-lg bg-surface-container-low transition-all focus-within:ring-2 focus-within:ring-primary">
-                  <div className="flex items-center gap-2 border-b border-outline-variant/10 bg-surface-container p-2">
-                    {['format_bold', 'format_italic', 'format_list_bulleted', 'link'].map((icon) => (
-                      <button key={icon} className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-white" type="button">
-                        <span className="material-symbols-outlined text-sm">{icon}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <textarea className="w-full resize-none border-none bg-transparent px-6 py-4 text-on-surface focus:ring-0" placeholder="Tell potential attendees what they can expect from this session..." rows="8" />
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-xl bg-surface-container-low p-1">
-              <div className="rounded-lg bg-surface-container-lowest p-8 shadow-sm">
-                <div className="mb-8 flex items-center gap-3">
-                  <span className="material-symbols-outlined rounded-lg bg-primary/10 p-2 text-primary">image</span>
-                  <h2 className="text-xl font-bold tracking-tight">Media</h2>
-                </div>
-                <div className="space-y-6">
-                  <div>
-                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Cover Image</label>
-                    <div className="group flex h-64 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-outline-variant/30 bg-surface-container-low text-center transition-all hover:bg-primary-fixed/30">
-                      <span className="material-symbols-outlined mb-2 text-4xl text-outline transition-colors group-hover:text-primary">add_photo_alternate</span>
-                      <p className="font-medium text-on-surface-variant">Click to upload or drag cover photo</p>
-                      <p className="mt-1 text-xs text-outline">Recommended: 1920x1080 (JPG, PNG)</p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Gallery Preview</label>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                      <div className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-outline-variant/30 bg-surface-container-low transition-all hover:bg-primary-fixed/30">
-                        <span className="material-symbols-outlined text-outline">add</span>
-                      </div>
-                      {[
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuBzr0XO_Pm7l9Oh2YzgrHz8JI-TBxAlaiS2qvdVnKxHh02Po8xqht4EDEO_Qf-BOdtpJU1lVPfVZ4Yq-Nh2mpZjv4I6bQQ9XBngjHEdseWFaCs_q-K4WwkzLi5nX_W6ScxCwvTE5diTNVUTQ2oAvJgF5IiCND4GBfCI58QykS3qioI06BuCqUWrZ8vMVcZ9rR409WyieRJgIDLbDD_ZcZlD5dATSQEhwYSZcbhSNqNHcTvkISu9fjIEx2MS60ryimIoN4hNt0pSRQM',
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuAfMuqh1Kag_-AGtfl0BLpCBUWTCI9F6-RiBN5jFMAvVF-UV2XtZZbA1SDLlmTRYMQXl2d_mtiofpmE8CoaYIHE2GA0q30rDfx9VtpHS4_zvE6ikl_eqC421jd99vX3TTLI-NzwIXx0RYewSGQyA0TkcZBW13DYHcbb2zBMMe13_axs8euM7ha0jelm0pMnPTSAsHO3QAv8SojqYoHAAQ268NTU-HNs8Rh0sJ8ayjx0bcbaJf_DymQS5yO0NPYy1LneI4AxDQULh8k',
-                      ].map((image) => (
-                        <div key={image} className="group relative aspect-square overflow-hidden rounded-lg">
-                          <div className="absolute inset-0 flex items-center justify-center bg-primary/20 opacity-0 transition-opacity group-hover:opacity-100">
-                            <span className="material-symbols-outlined text-white">delete</span>
-                          </div>
-                          <img alt="Gallery placeholder" className="h-full w-full object-cover" src={image} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-xl bg-surface-container-low p-1">
-              <div className="rounded-lg bg-surface-container-lowest p-8 shadow-sm">
-                <div className="mb-8 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined rounded-lg bg-primary/10 p-2 text-primary">group</span>
-                    <h2 className="text-xl font-bold tracking-tight">Featured Speakers</h2>
-                  </div>
-                  <button className="flex items-center gap-1 text-sm font-bold text-primary hover:underline" type="button">
-                    <span className="material-symbols-outlined text-sm">add_circle</span>
-                    Add Speaker
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex flex-col items-center gap-6 rounded-lg border border-outline-variant/10 bg-surface-container-low p-6 md:flex-row">
-                    <div className="group relative h-20 w-20 overflow-hidden rounded-full border-2 border-dashed border-outline-variant bg-white">
-                      <span className="material-symbols-outlined absolute inset-0 flex items-center justify-center text-outline group-hover:text-primary">add_a_photo</span>
-                    </div>
-                    <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-                      <input className="w-full rounded-full border-none bg-white px-6 py-3 text-on-surface focus:ring-2 focus:ring-primary" placeholder="Speaker Name" type="text" />
-                      <input className="w-full rounded-full border-none bg-white px-6 py-3 text-on-surface focus:ring-2 focus:ring-primary" placeholder="Role / Organization" type="text" />
-                    </div>
-                    <button className="rounded-full p-2 text-error transition-all hover:bg-error/10" type="button">
-                      <span className="material-symbols-outlined">delete_outline</span>
-                    </button>
-                  </div>
-                </div>
+                <textarea name="description" value={formData.description} onChange={handleChange} className="w-full resize-none rounded-[28px] border-none bg-surface-container-low px-6 py-4 text-on-surface focus:bg-white focus:ring-2 focus:ring-primary" placeholder="Tell potential attendees what they can expect from this session..." rows="8" required />
               </div>
             </section>
 
@@ -194,39 +243,84 @@ export default function CreateEvent() {
                   <span className="material-symbols-outlined rounded-lg bg-primary/10 p-2 text-primary">confirmation_number</span>
                   <h2 className="text-xl font-bold tracking-tight">Registration Settings</h2>
                 </div>
-                <div className="grid gap-8 md:grid-cols-3">
+                <div className="grid gap-8 md:grid-cols-2">
                   <div>
-                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Ticket Capacity</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute right-6 top-1/2 -translate-y-1/2 text-outline text-sm">people</span>
-                      <input className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="50" type="number" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Price</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-outline text-sm">payments</span>
-                      <input className="w-full rounded-full border-none bg-surface-container-low py-4 pl-14 pr-6 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="Free or 0.00" type="text" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Deadline</label>
-                    <input className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" type="date" />
+                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Registration Deadline</label>
+                    <input name="registration_deadline" value={formData.registration_deadline} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" type="date" required />
                   </div>
                 </div>
               </div>
             </section>
-          </form>
-        </div>
 
-        <div className="fixed bottom-8 left-1/2 z-40 -translate-x-1/2 lg:left-auto lg:right-12 lg:translate-x-0">
-          <div className="flex items-center gap-4 rounded-full border border-primary/10 bg-white/90 p-4 shadow-[0_20px_40px_rgba(123,110,246,0.2)] backdrop-blur-md">
-            <span className="hidden text-sm font-medium text-on-surface-variant md:block">Unsaved changes detected</span>
-            <div className="hidden h-8 w-px bg-outline-variant/30 md:block" />
-            <button className="rounded-full bg-primary px-8 py-3 font-bold text-on-primary transition-all hover:scale-105" type="button">
-              Save Changes
-            </button>
-          </div>
+            <section className="rounded-xl bg-surface-container-low p-1">
+              <div className="rounded-lg bg-surface-container-lowest p-8 shadow-sm">
+                <div className="mb-8 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined rounded-lg bg-primary/10 p-2 text-primary">quiz</span>
+                    <h2 className="text-xl font-bold tracking-tight">Registration Questions</h2>
+                  </div>
+                  <button className="flex items-center gap-1 text-sm font-bold text-primary hover:underline" type="button" onClick={addQuestion}>
+                    <span className="material-symbols-outlined text-sm">add_circle</span>
+                    Add Question
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {formData.questions.map(question => (
+                    <div key={question.id} className="rounded-[28px] border border-outline-variant/10 bg-surface-container-low p-6">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <input
+                          value={question.question}
+                          onChange={event => handleQuestionChange(question.id, 'question', event.target.value)}
+                          className="w-full rounded-full border-none bg-white px-6 py-3 text-on-surface focus:ring-2 focus:ring-primary"
+                          placeholder="Question text"
+                          type="text"
+                          required
+                        />
+                        <select
+                          value={question.type}
+                          onChange={event => handleQuestionChange(question.id, 'type', event.target.value)}
+                          className="w-full rounded-full border-none bg-white px-6 py-3 text-on-surface focus:ring-2 focus:ring-primary"
+                        >
+                          <option value="text">Text</option>
+                          <option value="textarea">Textarea</option>
+                          <option value="select">Select</option>
+                          <option value="radio">Radio</option>
+                          <option value="checkbox">Checkbox</option>
+                        </select>
+                        <label className="flex items-center gap-3 text-sm font-medium text-on-surface-variant">
+                          <input
+                            checked={question.required}
+                            onChange={event => handleQuestionChange(question.id, 'required', event.target.checked)}
+                            type="checkbox"
+                          />
+                          Required field
+                        </label>
+                        <button className="justify-self-end rounded-full p-2 text-error transition-all hover:bg-error/10" type="button" onClick={() => removeQuestion(question.id)} disabled={formData.questions.length === 1}>
+                          <span className="material-symbols-outlined">delete_outline</span>
+                        </button>
+                        {(question.type === 'select' || question.type === 'radio' || question.type === 'checkbox') ? (
+                          <div className="md:col-span-2">
+                            <input
+                              value={question.optionsText}
+                              onChange={event => handleQuestionChange(question.id, 'optionsText', event.target.value)}
+                              className="w-full rounded-full border-none bg-white px-6 py-3 text-on-surface focus:ring-2 focus:ring-primary"
+                              placeholder="Options separated by commas"
+                              type="text"
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {errorMessage ? (
+              <p className="rounded-[24px] bg-rose-50 px-6 py-4 text-sm text-rose-600">{errorMessage}</p>
+            ) : null}
+          </form>
         </div>
       </main>
     </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { createCommittee } from '../api/committeeApi'
 
 const initialFormState = {
@@ -11,6 +12,7 @@ const initialFormState = {
 }
 
 export default function CreateCommitteeForm({ onClose, onSuccess }) {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState(initialFormState)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -35,6 +37,8 @@ export default function CreateCommitteeForm({ onClose, onSuccess }) {
     setErrorMessage('')
 
     try {
+      console.log('TOKEN:', localStorage.getItem('token'))
+
       const payload = {
         committee_name: formData.committee_name.trim(),
         description: formData.description.trim(),
@@ -42,17 +46,33 @@ export default function CreateCommitteeForm({ onClose, onSuccess }) {
           name: formData.affiliated_faculty_name.trim(),
         },
         tagline: formData.tagline.trim(),
-        start_year: formData.start_year ? Number(formData.start_year) : undefined,
+        start_year: Number(formData.start_year),
         tags: formData.tags
           .split(',')
           .map(tag => tag.trim())
           .filter(Boolean),
       }
 
-      await createCommittee(payload)
+      console.log('FINAL PAYLOAD:', payload)
+
+      const res = await createCommittee(payload)
+      console.log('Create response:', res)
+
       await onSuccess?.()
+
+      if (res.success) {
+        const committeeId = res.committee?.id
+
+        if (committeeId) {
+          onClose?.()
+          navigate(`/committee/${committeeId}`)
+          return
+        }
+      }
+
       onClose?.()
     } catch (error) {
+      console.log('ERROR RESPONSE:', error.response?.data)
       setErrorMessage(error.response?.data?.message || 'Unable to create committee right now.')
     } finally {
       setIsSubmitting(false)
