@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminLogin, loginStudent, signupStudent } from '../api/authApi'
+import { loginCommittee, signupStudent } from '../api/authApi'
 import { useToast } from '../components/ToastProvider'
 
 export default function SignUpLogin() {
   const [activeTab, setActiveTab] = useState('signup')
-  const [loginRole, setLoginRole] = useState('student')
+  const [role, setRole] = useState('student')
   const [signupForm, setSignupForm] = useState({
     sapId: '',
     fullName: '',
@@ -23,6 +23,7 @@ export default function SignUpLogin() {
     confirm: false,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
   const { showToast } = useToast()
 
@@ -50,6 +51,7 @@ export default function SignUpLogin() {
     }
 
     setIsSubmitting(true)
+    setError('')
 
     try {
       if (activeTab === 'signup') {
@@ -82,72 +84,59 @@ export default function SignUpLogin() {
         return
       }
 
-      if (loginRole === 'admin') {
-        const res = await adminLogin({
-          email: loginForm.email,
-          password: loginForm.password,
+      if (role === 'student') {
+        const res = await loginStudent({
+          email: loginForm.email.trim(),
+          password: loginForm.password.trim(),
         })
+        const payload = res.data || {}
+        const token = payload.token || payload.accessToken
+        const userName = payload.name || payload.user?.name || payload.fullName || payload.user?.fullName
+        const userEmail = payload.email || payload.user?.email
+
+        if (payload.success || token) {
+          if (token) {
+            localStorage.setItem('token', token)
+          }
+          localStorage.setItem('role', 'student')
+
+          if (userName) {
+            localStorage.setItem('userName', userName)
+          }
+
+          if (userEmail) {
+            localStorage.setItem('userEmail', userEmail)
+          }
+
+          navigate('/student-dashboard')
+          return
+        }
+      }
+
+      if (role === 'committee') {
+        const res = await loginCommittee({
+          email: loginForm.email.trim(),
+          password: loginForm.password.trim(),
+        })
+
+        console.log('Committee login response:', res)
 
         if (res.success) {
           localStorage.setItem('token', res.token)
-          localStorage.setItem('role', 'admin')
-          navigate('/admin-dashboard')
-        } else {
-          showToast('Login failed')
+          localStorage.setItem('role', 'committee')
+
+          const committeeId = res.data?.id
+
+          if (committeeId) {
+            localStorage.setItem('committeeId', committeeId)
+            navigate(`/committee/${committeeId}`)
+            return
+          }
         }
-
-        return
       }
-
-      const response = await loginStudent({
-        email: loginForm.email,
-        password: loginForm.password,
-      })
-      const payload = response.data || {}
-
-      const token = payload.token || payload.accessToken
-      const userName = payload.name || payload.user?.name || payload.fullName || payload.user?.fullName
-      const userEmail = payload.email || payload.user?.email
-
-      if (token) {
-        localStorage.setItem('token', token)
-      }
-
-      if (userName) {
-        localStorage.setItem('userName', userName)
-      }
-
-      if (userEmail) {
-        localStorage.setItem('userEmail', userEmail)
-      }
-
-      navigate('/student-dashboard')
     } catch (error) {
-      console.log('FULL ERROR:', error)
-      console.log('RESPONSE DATA:', error?.response?.data)
-      console.log('STATUS:', error?.response?.status)
-      console.log(
-        'REQUEST PAYLOAD:',
-        activeTab === 'signup'
-          ? {
-              sapId: signupForm.sapId,
-              fullName: signupForm.fullName,
-              email: signupForm.email,
-              password: signupForm.password,
-            }
-          : {
-              email: loginForm.email,
-              password: loginForm.password,
-            },
-      )
-
-      showToast(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          JSON.stringify(error?.response?.data) ||
-          error.message ||
-          'Something went wrong',
-      )
+      console.error('Login Error:', error.response?.data)
+      setError('Invalid credentials')
     } finally {
       setIsSubmitting(false)
     }
@@ -226,12 +215,12 @@ export default function SignUpLogin() {
 
           <div className="text-center mb-8">
             <h2 className="font-headline font-bold text-3xl text-on-surface mb-2">
-              {activeTab === 'signup' ? 'Create Account' : 'Welcome Back'}
+              {activeTab === 'signup' ? 'Create Account' : 'Committee Login'}
             </h2>
             <p className="text-on-surface-variant">
               {activeTab === 'signup'
                 ? 'Join the curated ecosystem of scholarly leaders.'
-                : 'Sign in to your MentorLink account.'}
+                : 'Sign in to access your committee dashboard.'}
             </p>
           </div>
 
@@ -241,9 +230,9 @@ export default function SignUpLogin() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setLoginRole('student')}
+                  onClick={() => setRole('student')}
                   className={`rounded-full px-4 py-3 text-sm font-bold transition ${
-                    loginRole === 'student'
+                    role === 'student'
                       ? 'bg-primary text-white'
                       : 'bg-transparent text-on-surface-variant hover:bg-surface-container-low'
                   }`}
@@ -252,14 +241,14 @@ export default function SignUpLogin() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLoginRole('admin')}
+                  onClick={() => setRole('committee')}
                   className={`rounded-full px-4 py-3 text-sm font-bold transition ${
-                    loginRole === 'admin'
+                    role === 'committee'
                       ? 'bg-primary text-white'
                       : 'bg-transparent text-on-surface-variant hover:bg-surface-container-low'
                   }`}
                 >
-                  Admin
+                  Committee
                 </button>
               </div>
             </div>
@@ -335,6 +324,10 @@ export default function SignUpLogin() {
               </div>
             )}
 
+            {activeTab === 'login' && error ? (
+              <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p>
+            ) : null}
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -346,8 +339,8 @@ export default function SignUpLogin() {
                   : 'Signing In...'
                 : activeTab === 'signup'
                   ? 'Create Account'
-                  : loginRole === 'admin'
-                    ? 'Sign In as Admin'
+                  : role === 'committee'
+                    ? 'Sign In as Committee'
                     : 'Sign In'}
             </button>
           </form>

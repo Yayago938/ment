@@ -72,22 +72,53 @@ export const getCommitteeById = async (id) => {
   throw lastError;
 };
 
-export const addMemberToCommittee = async ({ committeeId, memberId }) => {
-  const res = await api.post("/committee/addMemberToCommittee", {
-    committeeId,
-    memberId,
+export const getCommitteeHeads = async (committeeId) => {
+  const res = await api.post('/committee/getAllCommitteeHeads', {
+    committeeId
+  })
+  return res.data
+}
+
+export const getCommitteeMembers = async (committeeId) => {
+  const res = await api.post('/committee/getAllCommitteeMembers', {
+    committeeId
+  })
+  return res.data
+}
+
+export const addMemberToCommittee = async (data) => {
+  const res = await api.post('/committee/addMemberToCommittee', data)
+  return res.data
+}
+
+export const addHeadToCommittee = async (data) => {
+  const res = await api.post('/committee/addHeadToCommittee', data)
+  return res.data
+}
+
+export const deleteMemberFromCommittee = async ({ committeeId, memberId }) => {
+  const res = await api.delete("/committee/deleteMemberFromCommittee", {
+    data: {
+      committeeId,
+      memberId,
+    },
   });
 
   return res.data;
 };
 
-export const addHeadToCommittee = async ({ committeeId, headId, role_title, role_type }) => {
-  const res = await api.post("/committee/addHeadToCommittee", {
-    committeeId,
-    headId,
-    role_title,
-    role_type,
+export const deleteHeadFromCommittee = async ({ committeeId, headId }) => {
+  const res = await api.delete("/committee/deleteHeadFromCommittee", {
+    data: {
+      committeeId,
+      headId,
+    },
   });
 
+  return res.data;
+};
+
+export const updateCommittee = async (id, data) => {
+  const res = await api.patch(`/updateCommittees/${id}`, data);
   return res.data;
 };
