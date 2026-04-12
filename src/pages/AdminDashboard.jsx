@@ -10,22 +10,6 @@ const committeeGradients = [
   'from-amber-500 via-orange-500 to-rose-500',
 ]
 
-const normalizeCommittees = response => {
-  if (Array.isArray(response)) {
-    return response
-  }
-
-  if (Array.isArray(response?.data)) {
-    return response.data
-  }
-
-  if (Array.isArray(response?.committees)) {
-    return response.committees
-  }
-
-  return []
-}
-
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [committees, setCommittees] = useState([])
@@ -34,18 +18,30 @@ export default function AdminDashboard() {
   const [errorMessage, setErrorMessage] = useState('')
 
   const loadCommittees = useCallback(async () => {
+    const role = localStorage.getItem('role')
+    const token = localStorage.getItem('token')
+
+    console.log('Current role:', role)
+    console.log('Token:', token)
+
+    if (role !== 'admin') {
+      navigate('/login')
+      return
+    }
+
     setIsLoading(true)
     setErrorMessage('')
 
     try {
-      const response = await getAllCommittees()
-      setCommittees(normalizeCommittees(response))
+      const data = await getAllCommittees()
+      console.log('Committees API response:', data)
+      setCommittees(data)
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Unable to load committees.')
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     loadCommittees()
