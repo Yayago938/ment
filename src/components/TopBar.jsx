@@ -53,6 +53,7 @@ export default function TopBar({
             placeholder={placeholder}
             type="text"
             value={searchValue ?? ''}
+            readOnly={!onSearchChange}
             onChange={onSearchChange}
           />
         </div>

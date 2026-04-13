@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginCommittee, signupStudent } from '../api/authApi'
+import { loginCommittee, loginStudent, signupStudent } from '../api/authApi'
 import { useToast } from '../components/ToastProvider'
 
 export default function SignUpLogin() {
@@ -60,17 +60,26 @@ export default function SignUpLogin() {
           return
         }
 
-        await signupStudent({
+        localStorage.removeItem('studentId')
+        const res = await signupStudent({
           name: signupForm.fullName,
           sap_id: signupForm.sapId,
           email: signupForm.email,
           password: signupForm.password,
         })
+        const studentId =
+          res.data?.data?.id ||
+          res.data?.id
 
         localStorage.setItem('userName', signupForm.fullName)
         localStorage.setItem('userEmail', signupForm.email)
         localStorage.setItem('onboardingCompleted', 'false')
         localStorage.setItem('profileCompleted', 'false')
+        localStorage.setItem('role', 'student')
+
+        if (studentId) {
+          localStorage.setItem('studentId', String(studentId))
+        }
 
         setSignupForm({
           sapId: '',
@@ -80,11 +89,12 @@ export default function SignUpLogin() {
           confirmPassword: '',
         })
 
-        navigate('/personalization-intro')
+        navigate('/edit-student-profile')
         return
       }
 
       if (role === 'student') {
+        localStorage.removeItem('studentId')
         const res = await loginStudent({
           email: loginForm.email.trim(),
           password: loginForm.password.trim(),
@@ -93,6 +103,22 @@ export default function SignUpLogin() {
         const token = payload.token || payload.accessToken
         const userName = payload.name || payload.user?.name || payload.fullName || payload.user?.fullName
         const userEmail = payload.email || payload.user?.email
+        const studentId =
+          payload.data?.id ||
+          payload.data?._id ||
+          payload.data?.studentId ||
+          payload.data?.student_id ||
+          payload.id ||
+          payload.studentId ||
+          payload.student_id ||
+          payload.user?.id ||
+          payload.user?._id ||
+          payload.user?.studentId ||
+          payload.user?.student_id ||
+          payload.student?.id ||
+          payload.student?._id ||
+          payload.student?.studentId ||
+          payload.student?.student_id
 
         if (payload.success || token) {
           if (token) {
@@ -108,9 +134,15 @@ export default function SignUpLogin() {
             localStorage.setItem('userEmail', userEmail)
           }
 
+          if (studentId) {
+            localStorage.setItem('studentId', String(studentId))
+          }
+
           navigate('/student-dashboard')
           return
         }
+
+        throw new Error(payload.message || 'Login failed')
       }
 
       if (role === 'committee') {
@@ -135,8 +167,13 @@ export default function SignUpLogin() {
         }
       }
     } catch (error) {
-      console.error('Login Error:', error.response?.data)
-      setError('Invalid credentials')
+      console.error('Login Error:', error)
+      console.error('Login Error Response:', error.response?.data)
+      if (error.response?.status === 409) {
+        setError('User already exists. Please login.')
+        return
+      }
+      setError(error.response?.data?.message || error.message || 'Invalid credentials')
     } finally {
       setIsSubmitting(false)
     }
