@@ -246,7 +246,7 @@ export default function StudentProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+<div className="min-h-screen bg-gradient-to-br from-[#e9d5ff] via-[#c4b5fd] to-[#bfa2e6] text-gray-800">
       <StudentSidebar />
       <TopBar
         sidebar="student"
@@ -260,17 +260,17 @@ export default function StudentProfile() {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex-1">
             <h1 className="font-headline mt-4 text-4xl font-extrabold tracking-tight">Student Profile</h1>
-            <p className="mt-2 text-on-surface-variant">Overview of student details, skills, and campus involvement.</p>
+            <p className="mt-2 text-white/70">Overview of student details, skills, and campus involvement.</p>
           </div>
-          <Link to="/edit-student-profile" className="rounded-full border border-outline-variant px-6 py-3 text-sm font-bold text-primary">
+          <Link to="/edit-student-profile" className="rounded-full border border-outline-variant bg-white/70 px-6 py-3 text-sm font-bold text-primary">
             Edit
           </Link>
         </div>
 
         <div className="grid gap-8 xl:grid-cols-12">
           <div className="space-y-8 xl:col-span-8">
-            <section className="grid gap-8 rounded-[28px] border bg-white p-8 shadow-sm md:grid-cols-[auto,1fr]">
-              <div className="h-48 w-48 overflow-hidden rounded-[28px] bg-surface-container-low">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
+             <div className="h-48 w-48 overflow-hidden rounded-[28px] bg-surface-container-low">
                 <img className="h-full w-full object-cover" src={profileImage} alt={userName} />
               </div>
 
@@ -283,33 +283,33 @@ export default function StudentProfile() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {skills.length > 0 ? (
                     skills.map(tag => (
-                      <span key={tag} className="rounded bg-gray-100 px-3 py-1">{tag}</span>
+                      <span key={tag} className="bg-white/60 text-gray-800 backdrop-blur px-3 py-1 rounded-full">{tag}</span>
                     ))
                   ) : (
-                    <span className="text-on-surface-variant">{STUDENT_EMPTY}</span>
+                    <span className="text-white/70">{STUDENT_EMPTY}</span>
                   )}
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[28px] bg-white p-8">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
               <h3 className="text-2xl font-bold">About</h3>
               <p className="mt-4">{displayValue(student?.bio)}</p>
             </section>
 
-            <section className="rounded-[28px] bg-white p-8">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
               <h3 className="text-2xl font-bold">Basic Information</h3>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {infoRows.map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-surface-container-low px-5 py-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant">{label}</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray/70">{label}</p>
                     <p className="mt-2 font-medium">{displayValue(value)}</p>
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="rounded-[28px] bg-white p-8">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
               <h3 className="text-2xl font-bold">Interests & Hobbies</h3>
               <div className="mt-4 flex flex-wrap gap-2">
                 {interests.length > 0 ? (
@@ -317,12 +317,12 @@ export default function StudentProfile() {
                     <span key={item} className="rounded bg-gray-100 px-3 py-1">{item}</span>
                   ))
                 ) : (
-                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                  <p className="text-white/70">{STUDENT_EMPTY}</p>
                 )}
               </div>
             </section>
 
-            <section className="rounded-[28px] bg-white p-8">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
               <h3 className="text-2xl font-bold">Resume</h3>
               <div className="mt-4">
                 {student?.resume_url ? (
@@ -330,12 +330,12 @@ export default function StudentProfile() {
                     View Resume
                   </a>
                 ) : (
-                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                  <p className="text-white/70">{STUDENT_EMPTY}</p>
                 )}
               </div>
             </section>
 
-            <section className="rounded-[28px] bg-white p-8">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
               <h3 className="text-2xl font-bold">Experience</h3>
               <div className="mt-4 space-y-4">
                 {experiences.length > 0 ? (
@@ -345,7 +345,7 @@ export default function StudentProfile() {
                     return (
                       <div key={`${display.title}-${display.role}-${index}`} className="rounded-2xl bg-surface-container-low px-5 py-4">
                         <p className="font-bold">{displayValue(display.title)}</p>
-                        <p className="mt-1 text-sm text-on-surface-variant">{displayValue(display.role)}</p>
+                        <p className="mt-1 text-sm text-white/70">{displayValue(display.role)}</p>
                         {display.description ? (
                           <p className="mt-3 text-sm">{display.description}</p>
                         ) : null}
@@ -353,12 +353,12 @@ export default function StudentProfile() {
                     )
                   })
                 ) : (
-                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                  <p className="text-white/70">{STUDENT_EMPTY}</p>
                 )}
               </div>
             </section>
 
-            <section className="rounded-[28px] bg-white p-8">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
               <h3 className="text-2xl font-bold">Social Links</h3>
               <div className="mt-4 flex flex-wrap gap-4">
                 {socialLinkEntries.length > 0 ? (
@@ -368,23 +368,23 @@ export default function StudentProfile() {
                     </a>
                   ))
                 ) : (
-                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                  <p className="text-white/70">{STUDENT_EMPTY}</p>
                 )}
               </div>
             </section>
 
-            <section className="rounded-[28px] bg-white p-8">
+            <section className="text-gray-800 grid gap-8 rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
               <h3 className="text-2xl font-bold">Committee / Works In</h3>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {committeeEntries.length > 0 ? (
                   committeeEntries.map(committee => (
                     <div key={getCommitteeKey(committee)} className="rounded-xl bg-surface-container-low p-6">
                       <h4 className="font-bold">{displayValue(committee?.name)}</h4>
-                      <p className="mt-2 text-sm text-on-surface-variant">Member</p>
+                      <p className="mt-2 text-sm text-white/70">Member</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                  <p className="text-white/70">{STUDENT_EMPTY}</p>
                 )}
               </div>
             </section>

@@ -11,8 +11,8 @@ import {
 } from '../api/authApi'
 
 const PROFILE_ROUTE = '/profile'
-const inputClassName = 'mt-2 w-full rounded-2xl bg-surface-container-low px-6 py-4 font-medium outline-none focus:ring-2 focus:ring-primary'
-
+const inputClassName =
+  'mt-2 w-full rounded-2xl bg-white/60 text-gray-800 placeholder-gray-500 px-6 py-4 font-medium outline-none backdrop-blur focus:ring-2 focus:ring-white'
 const emptyExperienceItem = () => ({
   title: '',
   role: '',
@@ -415,7 +415,7 @@ export default function EditStudentProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+<div className="min-h-screen bg-gradient-to-br from-[#e9d5ff] via-[#c4b5fd] to-[#bfa2e6] text-gray-800">
       <StudentSidebar />
       <TopBar
         sidebar="student"
@@ -428,20 +428,13 @@ export default function EditStudentProfile() {
       <main className="px-4 pb-12 pt-24 lg:ml-64 lg:p-12 lg:pt-24">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex-1">
-            <Link to={PROFILE_ROUTE} className="inline-flex rounded-full border border-outline-variant px-5 py-2 text-sm font-bold text-primary">
+            <Link to={PROFILE_ROUTE} className="inline-flex bg-white/40 rounded-full border border-outline-variant px-5 py-2 text-sm font-bold text-primary">
               Back
             </Link>
             <h1 className="font-headline mt-4 text-4xl font-extrabold tracking-tight">Edit Profile</h1>
             <p className="mt-2 text-on-surface-variant">Update your student profile, academic details, and professional information.</p>
           </div>
-          <button
-            type="submit"
-            form="edit-student-profile-form"
-            disabled={saving}
-            className="rounded-full bg-gradient-to-r from-primary to-secondary-container px-8 py-4 text-sm font-bold text-white shadow-[0_20px_40px_rgba(123,110,246,0.2)] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {saving ? 'Saving...' : 'Save Profile'}
-          </button>
+          
         </div>
 
         {statusMessage ? (
@@ -457,7 +450,7 @@ export default function EditStudentProfile() {
         ) : null}
 
         <form id="edit-student-profile-form" className="space-y-8 xl:max-w-5xl" onSubmit={handleSubmit}>
-          <section className="rounded-[28px] bg-white p-8 shadow-sm">
+          <section className="rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/20 p-8 shadow-xl">
             <h2 className="text-2xl font-bold">Personal Info</h2>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <div className="md:col-span-2">
@@ -492,7 +485,7 @@ export default function EditStudentProfile() {
             </div>
           </section>
 
-          <section className="rounded-[28px] bg-white p-8 shadow-sm">
+          <section className="rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/20 p-8 shadow-xl">
             <h2 className="text-2xl font-bold">Academic Info</h2>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <div>
@@ -522,7 +515,8 @@ export default function EditStudentProfile() {
             </div>
           </section>
 
-          <section className="rounded-[28px] bg-white p-8 shadow-sm">
+            <section className="rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/20 p-8 shadow-xl">
+
             <h2 className="text-2xl font-bold">Professional / Profile Info</h2>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <div className="md:col-span-2">
@@ -542,7 +536,7 @@ export default function EditStudentProfile() {
             </div>
           </section>
 
-          <section className="rounded-[28px] bg-white p-8 shadow-sm">
+          <section className="rounded-2xl bg-white/40 backdrop-blur p-5">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-2xl font-bold">Experience</h2>
               <button
@@ -609,17 +603,17 @@ export default function EditStudentProfile() {
             </div>
           </section>
 
-          <section className="rounded-[28px] bg-white p-8 shadow-sm">
+          <section className="rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/20 p-8 shadow-xl">
             <h2 className="text-2xl font-bold">Committee / Works In</h2>
             <div className="mt-6">
               {committees.length > 0 ? (
                 <div className="grid gap-3 md:grid-cols-2">
                   {committees.map(committee => {
-                    const committeeId = String(committee.id || '')
+                    const committeeId = String(committee.id || committee._id)
                     const checked = form.existing_committee_id.includes(committeeId)
 
                     return (
-                      <label key={committeeId} className="flex cursor-pointer items-start gap-3 rounded-2xl bg-surface-container-low px-5 py-4">
+                      <label key={committeeId} className="flex cursor-pointer items-start gap-3 rounded-2xl bg-white/40 backdrop-blur border border-white/20 px-5 py-4">
                         <input
                           type="checkbox"
                           checked={checked}
@@ -642,7 +636,7 @@ export default function EditStudentProfile() {
             </div>
           </section>
 
-          <section className="rounded-[28px] bg-white p-8 shadow-sm">
+          <section className="rounded-[28px] bg-white/40 backdrop-blur-xl border border-white/20 p-8 shadow-xl">
             <h2 className="text-2xl font-bold">Social Links</h2>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <div>
@@ -671,7 +665,7 @@ export default function EditStudentProfile() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-full bg-gradient-to-r from-primary to-secondary-container px-8 py-4 text-sm font-bold text-white shadow-[0_20px_40px_rgba(123,110,246,0.2)] disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-full bg-gradient-to-r from-[#945fc5] to-[#e188e9] px-8 py-4 text-sm font-bold text-white shadow-lg hover:scale-105 transition"
             >
               {saving ? 'Saving...' : 'Save Profile'}
             </button>
