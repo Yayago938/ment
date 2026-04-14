@@ -4,12 +4,7 @@ import CommitteeSidebar from '../components/CommitteeSidebar'
 import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
 import { getCommitteeById } from '../api/committeeApi'
-
-const stats = [
-  ['Total Pipeline', '142', '12%', 'Active Applications', 'description', 'text-primary'],
-  ['Upcoming', '04', 'This Week', 'Scheduled Events', 'event_available', 'text-secondary'],
-  ['Network Size', '892', '', 'Total Mentors & Mentees', 'group', 'text-tertiary'],
-]
+import { getEventsByCommittee } from '../api/eventApi'
 
 const applications = [
   ['Marcus Chen', 'Applied for Visual Lead', 'New', 'https://lh3.googleusercontent.com/aida-public/AB6AXuBL9b--ORFPfgorc3Fig7xYN55tVOK91Ow0aEWERsjlwiHj5N8fMiXP5MBP5YLf93ob1ihV1hxfscuGzYnWHihJOuqkN6z53diDqGkTuS2QzuViRP6wExB2JbtApG9n-wP59TLcDiEb2JTcyvAh0_ps0ZmQjyICtLX2vqrPZPaNctuCGc5pjImroNfd0A4bnNIMDzIo6Jg5sB9iCeYi53DpnXSLCp9N8l3c9_5SHc0H7ij_7Il5eYiKW-OC_c07MmAA8No4hAcyJ3g', 'bg-primary-fixed text-on-primary-fixed-variant'],
@@ -20,8 +15,25 @@ const applications = [
 export default function CommitteeDashboard() {
   const { id } = useParams()
   const [committee, setCommittee] = useState(null)
+  const [activeTab, setActiveTab] = useState('members')
+  const [members, setMembers] = useState([])
+  const [heads, setHeads] = useState([])
+  const [events, setEvents] = useState([])
   const [loadingCommittee, setLoadingCommittee] = useState(Boolean(id))
+  const [loadingMembers, setLoadingMembers] = useState(false)
+  const [loadingHeads, setLoadingHeads] = useState(false)
+  const [loadingEvents, setLoadingEvents] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const token = localStorage.getItem('token')
+  const networkSize = loadingMembers || loadingHeads
+    ? '...'
+    : ((members?.length || 0) + (heads?.length || 0)).toString()
+  const totalEvents = loadingEvents ? '...' : events.length.toString()
+  const stats = [
+    ['Total Pipeline', '142', '12%', 'Active Applications', 'description', 'text-primary'],
+    ['Upcoming', totalEvents, 'This Week', 'Scheduled Events', 'event_available', 'text-secondary'],
+    ['Network Size', networkSize, '', 'Total Members & Heads', 'group', 'text-tertiary'],
+  ]
 
   useEffect(() => {
     if (!id) {
@@ -29,6 +41,7 @@ export default function CommitteeDashboard() {
     }
 
     localStorage.setItem('committeeId', id)
+    const token = localStorage.getItem('token')
 
     const loadCommittee = async () => {
       setLoadingCommittee(true)
@@ -44,8 +57,108 @@ export default function CommitteeDashboard() {
       }
     }
 
+    const fetchMembers = async () => {
+      try {
+        setLoadingMembers(true)
+        const res = await fetch('https://mentorlink-backend-nhah.onrender.com/committee/getAllCommitteeMembers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ committeeId: id }),
+        })
+        const data = await res.json()
+        setMembers(Array.isArray(data) ? data : data?.members || data?.data || [])
+      } catch (err) {
+        console.error('Error fetching members', err)
+      } finally {
+        setLoadingMembers(false)
+      }
+    }
+
+    const fetchHeads = async () => {
+      try {
+        setLoadingHeads(true)
+        const res = await fetch('https://mentorlink-backend-nhah.onrender.com/committee/getAllCommitteeHeads', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ committeeId: id }),
+        })
+        const data = await res.json()
+        setHeads(Array.isArray(data) ? data : data?.heads || data?.data || [])
+      } catch (err) {
+        console.error('Error fetching heads', err)
+      } finally {
+        setLoadingHeads(false)
+      }
+    }
+
+    const fetchEvents = async () => {
+      try {
+        setLoadingEvents(true)
+
+        const data = await getEventsByCommittee(id)
+        setEvents(Array.isArray(data) ? data : data?.events || data?.data || [])
+      } catch (err) {
+        console.error('Error fetching events', err)
+      } finally {
+        setLoadingEvents(false)
+      }
+    }
+
     loadCommittee()
+    fetchMembers()
+    fetchHeads()
+    fetchEvents()
   }, [id])
+
+  const handleDeleteMember = async (memberId) => {
+    if (!window.confirm('Are you sure you want to delete this member?')) return
+
+    try {
+      await fetch('https://mentorlink-backend-nhah.onrender.com/committee/deleteMemberFromCommittee', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          committeeId: id,
+          memberId: memberId,
+        }),
+      })
+
+      setMembers(prev => prev.filter(m => m.student_id !== memberId))
+    } catch (err) {
+      console.error('Failed to delete member', err)
+    }
+  }
+
+  const handleDeleteHead = async (headId) => {
+    if (!window.confirm('Are you sure you want to delete this head?')) return
+
+    try {
+      await fetch('https://mentorlink-backend-nhah.onrender.com/committee/deleteHeadFromCommittee', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          committeeId: id,
+          headId: headId,
+        }),
+      })
+
+      setHeads(prev => prev.filter(h => h.student_id !== headId))
+    } catch (err) {
+      console.error('Failed to delete head', err)
+    }
+  }
 
   const committeeData = useMemo(() => ({
     committee_name: committee?.name || 'Committee Dashboard',
@@ -55,6 +168,18 @@ export default function CommitteeDashboard() {
     start_year: committee?.startYear || '2024',
     tags: Array.isArray(committee?.committeeHeads) && committee.committeeHeads.length > 0 ? ['Heads Listed'] : [],
   }), [committee])
+
+  const nextEvent = useMemo(() => {
+    if (!events.length) return null
+
+    const sorted = [...events].sort(
+      (a, b) => new Date(a.event_date) - new Date(b.event_date)
+    )
+
+    const now = new Date()
+
+    return sorted.find(event => new Date(event.event_date) >= now) || sorted[0]
+  }, [events])
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -149,37 +274,97 @@ export default function CommitteeDashboard() {
             </div>
 
             <article className="rounded-[28px] border border-outline-variant/10 bg-surface-container-low p-8">
-              <div className="mb-8 flex items-center justify-between">
-                <h3 className="font-headline text-2xl font-bold">Growth &amp; Insights</h3>
-                <select className="bg-transparent text-xs font-bold text-primary outline-none">
-                  <option>Last 6 Months</option>
-                  <option>Last Year</option>
-                </select>
+              <div className="mb-6 flex items-center gap-4">
+                <button
+                  onClick={() => setActiveTab('members')}
+                  className={`px-4 py-2 rounded-full text-sm font-bold ${
+                    activeTab === 'members' ? 'bg-primary text-white' : 'bg-white text-primary'
+                  }`}
+                >
+                  Members
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('heads')}
+                  className={`px-4 py-2 rounded-full text-sm font-bold ${
+                    activeTab === 'heads' ? 'bg-primary text-white' : 'bg-white text-primary'
+                  }`}
+                >
+                  Heads
+                </button>
               </div>
-              <div className="flex h-56 items-end gap-4 px-4">
-                {[24, 32, 28, 40, 36, 44].map((height, index) => (
-                  <div key={height} className="flex flex-1 flex-col items-center gap-3">
-                    <div className={`w-full rounded-t-2xl ${index === 5 ? 'bg-primary' : 'bg-primary-fixed'} transition-colors`} style={{ height: `${height * 4}px` }} />
-                    <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${index === 5 ? 'text-primary' : 'text-on-surface-variant'}`}>
-                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][index]}
-                    </span>
-                  </div>
-                ))}
-              </div>
+
+              {activeTab === 'members' && (
+                <div className="space-y-4">
+                  {loadingMembers ? (
+                    <p>Loading members...</p>
+                  ) : members.length === 0 ? (
+                    <p>No members found</p>
+                  ) : (
+                    members.map(member => (
+                      <div key={member.id || member._id || member.student_id} className="flex justify-between items-center rounded-xl bg-white p-4 shadow-sm">
+                        <div>
+                          <p className="font-bold">{member.student_id}</p>
+                          <p className="text-xs text-gray-500">{member.role_type}</p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteMember(member.student_id)}
+                          className="text-red-500 hover:text-red-700 transition"
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'heads' && (
+                <div className="space-y-4">
+                  {loadingHeads ? (
+                    <p>Loading heads...</p>
+                  ) : heads.length === 0 ? (
+                    <p>No heads found</p>
+                  ) : (
+                    heads.map(head => (
+                      <div key={head.id || head._id || head.student_id} className="flex justify-between items-center rounded-xl bg-white p-4 shadow-sm">
+                        <div>
+                          <p className="font-bold">{head.student_id}</p>
+                          <p className="text-xs text-gray-500">{head.role_title} ({head.role_type})</p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteHead(head.student_id)}
+                          className="text-red-500 hover:text-red-700 transition"
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </article>
           </div>
 
           <div className="space-y-8">
             <h2 className="font-headline text-3xl font-bold">Next Event</h2>
             <article className="ambient-shadow relative flex h-[28rem] flex-col justify-end overflow-hidden rounded-[32px] p-8 text-white">
-              <img className="absolute inset-0 h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDclrmqU_6qblCD-kgD4Ty4AzznzU2hGGoWPp8mv4fU01ZCtpJndw2npWIGrIhKUxyexiFmDVy1Q0jZvj6SSiDCOF78AbpuDFmaWJJwYeJWjBZPvjpWuW8sIdMBz-VQTEWmvZtk0RiRLr2sCFywXsqvRdS5vBlIh2Xo1cMaTktBc46g3YNleHFLy0pQy0sclLwzNBzbMN3LzmuN1vzg0wndQFyI_PPCLT0BVFludc2xZ59e0hK-rxXMz_32vueQxS3JdrpKHZosEoI" alt="Portfolio Review Night" />
+              <img className="absolute inset-0 h-full w-full object-cover" src={nextEvent?.poster_url || 'https://via.placeholder.com/400'} alt={nextEvent?.event_name || 'No Events'} />
               <div className="absolute inset-0 bg-gradient-to-t from-on-surface via-on-surface/20 to-transparent" />
               <div className="relative z-10">
                 <span className="rounded-full bg-secondary-container/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-on-secondary-container">Featured</span>
-                <h3 className="font-headline mt-4 text-4xl font-extrabold">Portfolio Review Night</h3>
+                <h3 className="font-headline mt-4 text-4xl font-extrabold">
+                  {nextEvent?.event_name || 'No Events'}
+                </h3>
                 <div className="mt-4 flex gap-4 text-sm text-white/80">
-                  <span>Oct 24</span>
-                  <span>18:30</span>
+                  <span>
+                    {nextEvent
+                      ? new Date(nextEvent.event_date).toLocaleDateString()
+                      : '--'}
+                  </span>
+                  <span>
+                    {nextEvent?.event_time || '--'}
+                  </span>
                 </div>
                 <button className="mt-6 rounded-full bg-white px-4 py-3 text-sm font-bold text-on-surface">Open Event</button>
               </div>
