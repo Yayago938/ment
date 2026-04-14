@@ -24,6 +24,7 @@ import Recommendations from './pages/Recommendations'
 import SignUpLogin from './pages/SignUpLogin'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentProfile from './pages/StudentProfile'
+import Search from './pages/Search'
 
 export default function App() {
   return (
@@ -41,8 +42,7 @@ export default function App() {
       <Route path="/finding-matches" element={<FindingMatches />} />
       <Route path="/committee-detail" element={<CommitteeDetail />} />
       <Route path="/committee-detail/:id" element={<CommitteeDetail />} />
-      <Route
-        path="/committee/profile"
+      <Route   path="/committee/profile"
         element={
           <ProtectedRoute role="committee">
             <CommitteeProfile />
@@ -58,6 +58,7 @@ export default function App() {
         }
       />
       <Route path="/applications" element={<MyApplications />} />
+      <Route path='/search' element={<Search/>} />
       <Route path="/applications/tracker" element={<ApplicationTracker />} />
       <Route path="/student-dashboard" element={<StudentDashboard />} />
       <Route path="/explore" element={<ExploreCommunities />} />

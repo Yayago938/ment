@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom'
 import MaterialIcon from './MaterialIcon'
 
@@ -29,34 +30,56 @@ export default function TopBar({
   const storedUserName = localStorage.getItem('userName') || 'Student'
   const storedUserRole = localStorage.getItem('userRoleLabel') || 'Student'
   const storedUserImage = localStorage.getItem('userImage') || localStorage.getItem('profileImage') || ''
+
   const resolvedUserName = sidebar === 'student' ? storedUserName : (userName || storedUserName)
   const resolvedUserRole = sidebar === 'student' ? storedUserRole : (userRole || 'Student')
   const resolvedUserImage = sidebar === 'student'
     ? (storedUserImage || buildAvatarFallback(storedUserName))
     : (userImage || storedUserImage || buildAvatarFallback(resolvedUserName))
+
   const resolvedNotificationsTo = notificationsTo || (sidebar === 'committee' ? '/committee/notifications' : '/notifications')
   const resolvedProfileTo = profileTo || (sidebar === 'committee' ? '/committee/profile' : '/profile')
+
   const contentOffset = sidebar === 'committee' ? 'lg:ml-64' : 'lg:pl-64'
   const headerOffset = sidebar === 'committee' ? 'lg:left-64 lg:w-[calc(100%-16rem)]' : 'lg:left-0 lg:w-full'
+
+  // 🔥 ONLY NEW LINE (detect search page)
+  const isSearchPage = window.location.pathname === "/search"
 
   return (
     <header
       className={`glass-panel fixed top-0 z-40 flex h-20 items-center justify-between px-6 shadow-[0_20px_40px_rgba(123,110,246,0.08)] ${headerOffset} w-full`}
     >
       <div className={`flex flex-1 items-center ${contentOffset}`}>
-        <div className="relative w-full max-w-xl">
-          <MaterialIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
-            search
-          </MaterialIcon>
-          <input
-            className="w-full rounded-full border-none bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-primary/20"
-            placeholder={placeholder}
-            type="text"
-            value={searchValue ?? ''}
-            readOnly={!onSearchChange}
-            onChange={onSearchChange}
-          />
-        </div>
+
+        {/* 🔥 ONLY CHANGED BLOCK */}
+        {isSearchPage ? (
+          <div className="relative w-full max-w-xl">
+            <MaterialIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
+              search
+            </MaterialIcon>
+            <input
+              className="w-full rounded-full border-none bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-primary/20"
+              placeholder={placeholder}
+              type="text"
+              value={searchValue ?? ''}
+              onChange={onSearchChange}
+            />
+          </div>
+        ) : (
+          <Link to="/search" className="relative w-full max-w-xl block">
+            <MaterialIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
+              search
+            </MaterialIcon>
+            <input
+              className="w-full cursor-pointer rounded-full border-none bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none"
+              placeholder={placeholder}
+              type="text"
+              readOnly
+            />
+          </Link>
+        )}
+
       </div>
 
       <div className="hidden items-center gap-5 lg:flex">
@@ -80,7 +103,9 @@ export default function TopBar({
             )
           ))}
         </div>
+
         <div className="h-8 w-px bg-outline-variant/30" />
+
         <Link to={resolvedProfileTo} className="flex items-center gap-3">
           <div className="text-right">
             <p className="text-sm font-bold text-on-surface">{resolvedUserName}</p>
@@ -88,9 +113,14 @@ export default function TopBar({
               {resolvedUserRole}
             </p>
           </div>
-          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white" src={resolvedUserImage} alt={resolvedUserName} />
+          <img
+            className="h-10 w-10 rounded-full object-cover ring-2 ring-white"
+            src={resolvedUserImage}
+            alt={resolvedUserName}
+          />
         </Link>
       </div>
     </header>
   )
 }
+
