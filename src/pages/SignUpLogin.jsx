@@ -57,6 +57,7 @@ export default function SignUpLogin() {
       if (activeTab === 'signup') {
         if (signupForm.password !== signupForm.confirmPassword) {
           showToast('Passwords do not match')
+          setIsSubmitting(false)
           return
         }
 
@@ -101,8 +102,18 @@ export default function SignUpLogin() {
         })
         const payload = res.data || {}
         const token = payload.token || payload.accessToken
-        const userName = payload.name || payload.user?.name || payload.fullName || payload.user?.fullName
-        const userEmail = payload.email || payload.user?.email
+        const userName =
+        payload.data?.name ||
+        payload.name ||
+        payload.user?.name ||
+        payload.fullName ||
+        payload.user?.fullName
+
+        const userEmail =
+        payload.data?.email ||
+        payload.email ||
+        payload.user?.email
+
         const studentId =
           payload.data?.id ||
           payload.data?._id ||
