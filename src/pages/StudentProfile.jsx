@@ -2,25 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
-import { getOneStudent } from '../api/authApi'
+import {
+  createStudentProfile,
+  getOneStudent,
+  normalizeStudentResponse,
+} from '../api/authApi'
 import { getAllCommittees } from '../api/committeeApi'
-import api from '../api/axios'
 
-/* ---------------- NORMALIZERS ---------------- */
-
-const normalizeStudent = (response) => {
-  if (!response) return null
-
-  const data = response.data || response
-
-  return (
-    data.student ||
-    data.data ||
-    data.user ||
-    data ||
-    null
-  )
-}
+const STUDENT_EMPTY = 'Not added'
+const DEFAULT_PROFILE_IMAGE = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCsI-bw3VtCpIIjSBLpU7BOOjlBqnxIby2i1O-xugAAznZQoRzfyZZySvtQL6m7_IqgAobQ7awNjd3dagTgi4UYq5MhzTQlO6uD_YQZDvMI9lNxHithFKTCViTuBpXUg7v82HvcWjfr2MiXgKOwpEiOJoNNGxU_pb195SbOH5g6kloPiO924yqyucPqENAt0R0tLYTffmqF0LxWpC6XQhl7CAGPDOxY3mJVkVIX9FDeGWBnIU6JyLPwwQoipsu6uQU-v8s-_6w_UrM'
 
 const normalizeCommittees = response => {
   if (Array.isArray(response)) return response
@@ -31,17 +21,17 @@ const normalizeCommittees = response => {
 }
 
 const normalizeArrayField = value => {
-  if (Array.isArray(value)) return value
+  if (Array.isArray(value)) return value.filter(Boolean)
 
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value)
-      return Array.isArray(parsed)
-        ? parsed
-        : value.split(',').map(i => i.trim()).filter(Boolean)
+      if (Array.isArray(parsed)) return parsed.filter(Boolean)
     } catch {
-      return value.split(',').map(i => i.trim()).filter(Boolean)
+      return value.split(',').map(item => item.trim()).filter(Boolean)
     }
+
+    return value.split(',').map(item => item.trim()).filter(Boolean)
   }
 
   return []
@@ -53,7 +43,7 @@ const normalizeObjectField = value => {
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value)
-      return parsed && typeof parsed === 'object' ? parsed : {}
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
     } catch {
       return {}
     }
@@ -63,12 +53,12 @@ const normalizeObjectField = value => {
 }
 
 const normalizeExperience = value => {
-  if (Array.isArray(value)) return value
+  if (Array.isArray(value)) return value.filter(Boolean)
 
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value)
-      return Array.isArray(parsed) ? parsed : []
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : []
     } catch {
       return []
     }
@@ -77,12 +67,10 @@ const normalizeExperience = value => {
   return []
 }
 
-const buildFallbackStudent = () => ({
+const buildCreateStudentPayload = studentId => ({
+  auth_id: studentId,
   name: localStorage.getItem('userName') || 'Student',
   email: localStorage.getItem('userEmail') || '',
-  bio: '',
-  branch: '',
-  year: '',
   skills: [],
   interests_hobbies: [],
   social_links: {},
@@ -90,110 +78,171 @@ const buildFallbackStudent = () => ({
   experience: [],
 })
 
-/* ---------------- COMPONENT ---------------- */
+const buildFallbackStudent = studentId => ({
+  auth_id: studentId || '',
+  name: localStorage.getItem('userName') || 'Student',
+  email: localStorage.getItem('userEmail') || '',
+  college_email: '',
+  phone_number: '',
+  sap_id: '',
+  roll_no: '',
+  profile_picture_url: '',
+  branch: '',
+  year: '',
+  class_division: '',
+  bio: '',
+  skills: [],
+  interests_hobbies: [],
+  social_links: {},
+  resume_url: '',
+  existing_committee_id: [],
+  committees: [],
+  committee_heads: [],
+  experience: [],
+})
+
+const syncStudentSession = student => {
+  if (!student || typeof student !== 'object') return
+
+  if (student.name) localStorage.setItem('userName', student.name)
+  if (student.email) localStorage.setItem('userEmail', student.email)
+  if (student.profile_picture_url) {
+    localStorage.setItem('userImage', student.profile_picture_url)
+    localStorage.setItem('profileImage', student.profile_picture_url)
+  }
+}
+
+const displayValue = value => {
+  if (value === null || value === undefined) return STUDENT_EMPTY
+  if (typeof value === 'string' && value.trim() === '') return STUDENT_EMPTY
+  return value
+}
+
+const getCommitteeKey = committee =>
+  String(
+    committee?.id ||
+    committee?.committee_id ||
+    committee?.committeeId ||
+    committee?.name ||
+    Math.random()
+  )
+
+const getExperienceDisplay = experience => ({
+  title:
+    experience?.title ||
+    experience?.organization ||
+    experience?.company ||
+    experience?.name ||
+    '',
+  role:
+    experience?.role ||
+    experience?.position ||
+    '',
+  description:
+    experience?.description ||
+    experience?.summary ||
+    experience?.details ||
+    '',
+})
 
 export default function StudentProfile() {
   const [student, setStudent] = useState(null)
   const [committees, setCommittees] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     const fetchProfileData = async () => {
       const studentId = localStorage.getItem('studentId')
 
       if (!studentId || studentId === 'undefined' || studentId === 'null') {
-        setError('Student ID not found. Please sign in again.')
+        setStudent(buildFallbackStudent(''))
         setLoading(false)
         return
       }
 
-      try {
-        // Fetch committees
-        const committeesRes = await getAllCommittees()
-        setCommittees(normalizeCommittees(committeesRes))
+      const fallbackStudent = buildFallbackStudent(studentId)
 
-        let studentData = null
+      const [committeesResult, studentResult] = await Promise.allSettled([
+        getAllCommittees(),
+        getOneStudent(studentId),
+      ])
 
-        try {
-          const studentRes = await getOneStudent(studentId)
-          studentData = normalizeStudent(studentRes)
-        } catch (err) {
-          console.warn("Student fetch failed, trying create...", err)
-
-          if (err.response?.status === 404 || err.response?.status === 500) {
-            try {
-              const created = await api.post('/create-student', {
-              auth_id: studentId,
-              name: localStorage.getItem('userName') || 'Student',
-             email: localStorage.getItem('userEmail') || '',
-             skills: [],
-             interests_hobbies: [],
-             social_links: {},
-             existing_committee_id: [],
-             experience: [],
-              })
-
-              studentData = normalizeStudent(created)
-            } catch (createErr) {
-              console.error("Create failed:", createErr)
-              setStudent(buildFallbackStudent())
-              return
-            }
-          } else {
-            throw err
-          }
-        }
-
-        setStudent(studentData || buildFallbackStudent())
-
-      } catch (error) {
-        console.error('Failed to load student profile:', error)
-        setError('Failed to load profile')
-      } finally {
-        setLoading(false)
+      if (committeesResult.status === 'fulfilled') {
+        setCommittees(normalizeCommittees(committeesResult.value))
+      } else {
+        console.warn('Committee fetch failed on student profile:', committeesResult.reason)
+        setCommittees([])
       }
+
+      let studentData =
+        studentResult.status === 'fulfilled'
+          ? normalizeStudentResponse(studentResult.value)
+          : null
+
+      if (!studentData && studentResult.status === 'rejected') {
+        const status = studentResult.reason?.response?.status
+
+        if (status === 404 || status === 500) {
+          try {
+            const created = await createStudentProfile(buildCreateStudentPayload(studentId))
+            studentData = normalizeStudentResponse(created)
+          } catch (createError) {
+            console.warn('Student creation failed on student profile:', createError)
+          }
+        } else {
+          console.warn('Student fetch failed on student profile:', studentResult.reason)
+        }
+      }
+
+      const resolvedStudent = studentData
+        ? { ...fallbackStudent, ...studentData }
+        : fallbackStudent
+
+      syncStudentSession(resolvedStudent)
+      setStudent(resolvedStudent)
+      setLoading(false)
     }
 
     fetchProfileData()
   }, [])
 
-  /* ---------------- DERIVED ---------------- */
-
   const skills = normalizeArrayField(student?.skills)
   const interests = normalizeArrayField(student?.interests_hobbies)
   const experiences = normalizeExperience(student?.experience)
   const socialLinks = normalizeObjectField(student?.social_links)
+  const socialLinkEntries = Object.entries(socialLinks).filter(([, value]) => Boolean(value))
 
-  const studentCommitteeIds = Array.isArray(student?.existing_committee_id)
-    ? student.existing_committee_id
-    : []
+  const committeeEntries = useMemo(() => {
+    const selectedIds = normalizeArrayField(student?.existing_committee_id).map(String)
 
-  const studentCommittees = useMemo(
-  () =>
-    committees.filter(c => {
-      const committeeId = c.id || c._id
-      return studentCommitteeIds.some(id => String(id) === String(committeeId))
-    }),
-  [committees, studentCommitteeIds]
-)
+    if (selectedIds.length === 0) {
+      return []
+    }
+
+    return committees
+      .filter(committee => selectedIds.includes(String(committee?.id)))
+      .map(committee => ({
+        id: committee.id,
+        name: committee.name,
+      }))
+  }, [committees, student?.existing_committee_id])
 
   const userName = student?.name || 'Student'
+  const profileImage = student?.profile_picture_url || DEFAULT_PROFILE_IMAGE
 
-  const profileImage =
-    student?.profile_picture_url ||
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCsI-bw3VtCpIIjSBLpU7BOOjlBqnxIby2i1O-xugAAznZQoRzfyZZySvtQL6m7_IqgAobQ7awNjd3dagTgi4UYq5MhzTQlO6uD_YQZDvMI9lNxHithFKTCViTuBpXUg7v82HvcWjfr2MiXgKOwpEiOJoNNGxU_pb195SbOH5g6kloPiO924yqyucPqENAt0R0tLYTffmqF0LxWpC6XQhl7CAGPDOxY3mJVkVIX9FDeGWBnIU6JyLPwwQoipsu6uQU-v8s-_6w_UrM'
-
-  const socialLinkEntries = Object.entries(socialLinks).filter(([, v]) => Boolean(v))
-
-  /* ---------------- UI ---------------- */
+  const infoRows = [
+    ['Email', student?.email],
+    ['College Email', student?.college_email],
+    ['Phone Number', student?.phone_number],
+    ['SAP ID', student?.sap_id],
+    ['Roll No', student?.roll_no],
+    ['Branch', student?.branch],
+    ['Year', student?.year],
+    ['Class Division', student?.class_division],
+  ]
 
   if (loading) {
     return <div className="min-h-screen bg-surface text-on-surface">Loading...</div>
-  }
-
-  if (!student) {
-    return <div>No profile yet. Please complete your profile.</div>
   }
 
   return (
@@ -206,8 +255,6 @@ export default function StudentProfile() {
         userRole="Student"
         userImage={profileImage}
       />
-
-      {/* ✅ EVERYTHING BELOW IS UNTOUCHED UI */}
 
       <main className="px-4 pb-12 pt-24 lg:ml-64 lg:p-12 lg:pt-24">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -222,65 +269,127 @@ export default function StudentProfile() {
 
         <div className="grid gap-8 xl:grid-cols-12">
           <div className="space-y-8 xl:col-span-8">
-
-            {/* PROFILE */}
             <section className="grid gap-8 rounded-[28px] border bg-white p-8 shadow-sm md:grid-cols-[auto,1fr]">
-              <div className="h-48 w-48 overflow-hidden rounded-[28px]">
+              <div className="h-48 w-48 overflow-hidden rounded-[28px] bg-surface-container-low">
                 <img className="h-full w-full object-cover" src={profileImage} alt={userName} />
               </div>
 
               <div>
-                <h2 className="text-3xl font-extrabold">{student.name}</h2>
-                <div className="mt-4">{student.branch} • {student.year}</div>
+                <h2 className="text-3xl font-extrabold">{displayValue(student?.name)}</h2>
+                <div className="mt-4">
+                  {displayValue(student?.branch)} {' | '} {displayValue(student?.year)}
+                </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {skills.map(tag => (
-                    <span key={tag} className="px-3 py-1 bg-gray-100 rounded">{tag}</span>
-                  ))}
+                  {skills.length > 0 ? (
+                    skills.map(tag => (
+                      <span key={tag} className="rounded bg-gray-100 px-3 py-1">{tag}</span>
+                    ))
+                  ) : (
+                    <span className="text-on-surface-variant">{STUDENT_EMPTY}</span>
+                  )}
                 </div>
               </div>
             </section>
 
-            {/* ABOUT */}
-            <section className="bg-white p-8 rounded-[28px]">
+            <section className="rounded-[28px] bg-white p-8">
               <h3 className="text-2xl font-bold">About</h3>
-              <p className="mt-4">{student.bio || 'No bio added yet.'}</p>
+              <p className="mt-4">{displayValue(student?.bio)}</p>
             </section>
 
-            {/* COMMITTEES */}
-            <section>
-              <h3 className="text-2xl font-bold">Experience / Works In</h3>
-
-              <div className="grid gap-4 mt-4 md:grid-cols-2">
-                {studentCommittees.map((committee) => {
-                  const exp = experiences.find(
-                    e => String(e?.committee_id) === String(committee.id)
-                  )
-
-                  return (
-                    <div key={committee.id} className="p-6 bg-white rounded-xl">
-                      <h4 className="font-bold">{committee.name}</h4>
-                      <p>{exp?.role || 'Member'}</p>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-
-            {/* SOCIAL */}
-            <section className="bg-white p-8 rounded-[28px]">
-              <h3 className="text-2xl font-bold">Social Links</h3>
-              <div className="mt-4 flex gap-2">
-                {socialLinkEntries.map(([k, v]) => (
-                  <a key={k} href={v} target="_blank" rel="noreferrer">{k}</a>
+            <section className="rounded-[28px] bg-white p-8">
+              <h3 className="text-2xl font-bold">Basic Information</h3>
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                {infoRows.map(([label, value]) => (
+                  <div key={label} className="rounded-2xl bg-surface-container-low px-5 py-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant">{label}</p>
+                    <p className="mt-2 font-medium">{displayValue(value)}</p>
+                  </div>
                 ))}
               </div>
             </section>
 
+            <section className="rounded-[28px] bg-white p-8">
+              <h3 className="text-2xl font-bold">Interests & Hobbies</h3>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {interests.length > 0 ? (
+                  interests.map(item => (
+                    <span key={item} className="rounded bg-gray-100 px-3 py-1">{item}</span>
+                  ))
+                ) : (
+                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-[28px] bg-white p-8">
+              <h3 className="text-2xl font-bold">Resume</h3>
+              <div className="mt-4">
+                {student?.resume_url ? (
+                  <a href={student.resume_url} target="_blank" rel="noreferrer" className="font-semibold text-primary underline underline-offset-4">
+                    View Resume
+                  </a>
+                ) : (
+                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-[28px] bg-white p-8">
+              <h3 className="text-2xl font-bold">Experience</h3>
+              <div className="mt-4 space-y-4">
+                {experiences.length > 0 ? (
+                  experiences.map((experience, index) => {
+                    const display = getExperienceDisplay(experience)
+
+                    return (
+                      <div key={`${display.title}-${display.role}-${index}`} className="rounded-2xl bg-surface-container-low px-5 py-4">
+                        <p className="font-bold">{displayValue(display.title)}</p>
+                        <p className="mt-1 text-sm text-on-surface-variant">{displayValue(display.role)}</p>
+                        {display.description ? (
+                          <p className="mt-3 text-sm">{display.description}</p>
+                        ) : null}
+                      </div>
+                    )
+                  })
+                ) : (
+                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-[28px] bg-white p-8">
+              <h3 className="text-2xl font-bold">Social Links</h3>
+              <div className="mt-4 flex flex-wrap gap-4">
+                {socialLinkEntries.length > 0 ? (
+                  socialLinkEntries.map(([key, value]) => (
+                    <a key={key} href={value} target="_blank" rel="noreferrer" className="font-semibold capitalize text-primary underline underline-offset-4">
+                      {key}
+                    </a>
+                  ))
+                ) : (
+                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-[28px] bg-white p-8">
+              <h3 className="text-2xl font-bold">Committee / Works In</h3>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {committeeEntries.length > 0 ? (
+                  committeeEntries.map(committee => (
+                    <div key={getCommitteeKey(committee)} className="rounded-xl bg-surface-container-low p-6">
+                      <h4 className="font-bold">{displayValue(committee?.name)}</h4>
+                      <p className="mt-2 text-sm text-on-surface-variant">Member</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-on-surface-variant">{STUDENT_EMPTY}</p>
+                )}
+              </div>
+            </section>
           </div>
         </div>
- 
-
       </main>
     </div>
   )

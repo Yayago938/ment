@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
-import { deleteEventRegistration, getEventRegistrations } from '../api/eventRegistrationApi'
+import { deleteEventRegistration } from '../api/eventRegistrationApi'
 import { useToast } from '../components/ToastProvider'
-
-const EVENT_ID = '8a35bc6b-6f2c-4b3e-a3f2-3c717553071b'
 
 const filterOptions = ['All', 'Applied', 'Under Review', 'Shortlisted', 'Accepted', 'Rejected', 'Closed']
 
@@ -50,28 +48,9 @@ export default function MyApplications() {
   const { showToast } = useToast()
 
   useEffect(() => {
-    const fetchApplications = async () => {
-      setLoading(true)
-      setError('')
-
-      try {
-        const response = await getEventRegistrations(EVENT_ID)
-        console.log('Event registrations response:', response)
-
-        const raw = response.data?.data || response.data?.registrations || response.data || []
-        const registrations = Array.isArray(raw) ? raw : []
-        const mappedApplications = registrations.map(mapRegistrationToApplication)
-
-        setApplications(mappedApplications)
-      } catch (fetchError) {
-        console.error('Failed to fetch registrations:', fetchError)
-        setError(fetchError.response?.data?.message || 'Failed to load applications.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchApplications()
+    setLoading(false)
+    setError('')
+    setApplications([])
   }, [])
 
   const handleDelete = async registrationId => {
