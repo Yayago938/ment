@@ -160,7 +160,7 @@ const Search = () => {
                                         key={e.id}
                                         onClick={() => {
                                             storeRecent(e.event_name)
-                                            navigate(`/events/${e.id}`)
+                                            navigate(`/events/${e.id}`, { state: { event: e } })
                                         }}
                                         className="min-w-[280px] cursor-pointer rounded-3xl bg-white p-6 shadow-md hover:shadow-xl transition flex flex-col gap-3"
                                     >

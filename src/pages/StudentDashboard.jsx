@@ -118,6 +118,8 @@ export default function StudentDashboard() {
         detail: events[0].description || 'No description available',
         dateLabel: formatEventDate(events[0]).dateLabel,
         image: events[0].image || events[0].event_image || eventPlaceholderImage,
+        venue:events[0].venue ,
+        fid: events[0].id ,
       }
     : {
         title: 'Annual Tech Symposium 2024',
@@ -254,11 +256,15 @@ export default function StudentDashboard() {
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <span className="rounded-full bg-surface-container-low px-4 py-2 text-xs font-semibold">{featuredEvent.dateLabel}</span>
-                  <span className="rounded-full bg-surface-container-low px-4 py-2 text-xs font-semibold">Grand Hall</span>
+                  <span className="rounded-full bg-surface-container-low px-4 py-2 text-xs font-semibold">{featuredEvent.venue}</span>
                 </div>
-                <Link to="/events/register" className="mt-8 block w-full rounded-full bg-primary py-3 text-center text-sm font-bold text-white">
-                  Register Now
-                </Link>
+                <Link
+  to={`/events/${featuredEvent.fid}/register`}
+  state={{ event: featuredEvent }}
+  className="mt-8 block w-full rounded-full bg-primary py-3 text-center text-sm font-bold text-white"
+>
+  Register Now
+</Link>
               </div>
             </article>
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 import FloatingBackButton from '../components/FloatingBackButton'
@@ -49,10 +49,14 @@ const normalizeContacts = contacts =>
 export default function EventDetails() {
   const { id } = useParams()
   const location = useLocation()
-  const [eventDetails, setEventDetails] = useState(null)
+  const navigate = useNavigate()
+  const event = location.state?.event || {}
+  const [eventDetails, setEventDetails] = useState(Object.keys(event).length > 0 ? event : null)
 
   const selectedEventId =
     id ||
+    event.id ||
+    event._id ||
     location.state?.eventId ||
     location.state?.eventPayload?.eventId ||
     location.state?.eventPayload?.id
@@ -107,12 +111,7 @@ export default function EventDetails() {
     }
   }, [eventDetails, selectedEventId])
 
-  const registerState = eventMeta.id
-    ? {
-        eventId: eventMeta.id,
-        eventPath: `/events/${eventMeta.id}`,
-      }
-    : undefined
+  const registrationEvent = eventDetails || event
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -223,13 +222,17 @@ export default function EventDetails() {
                     ))}
                   </div>
                 ) : null}
-                <Link
-                  to="/events/register"
-                  state={registerState}
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(`/events/${eventMeta.id}/register`, {
+                      state: { event: registrationEvent },
+                    })
+                  }
                   className="mt-8 block w-full rounded-full bg-gradient-to-br from-[#7B6EF6] to-[#F6A6C1] px-8 py-5 text-center text-lg font-bold text-white shadow-lg"
                 >
                   Register Now
-                </Link>
+                </button>
               </article>
             </aside>
           </div>
