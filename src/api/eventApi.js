@@ -15,6 +15,11 @@ export const updateEvent = async (eventId, data) => {
   return res.data;
 };
 
+export const deleteEvent = async (eventId) => {
+  const res = await api.delete(`/events/deleteEvent/${eventId}`);
+  return res.data;
+};
+
 export const getEventRegistrations = async (eventId) => {
   const res = await api.get(`/events/${eventId}/allRegistrations`);
   return res.data;
