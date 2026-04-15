@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
 import TopBar from '../components/TopBar'
-import { getEventsByCommittee } from '../api/eventApi'
+import { deleteEvent, getEventsByCommittee } from '../api/eventApi'
 
 const getEventId = event => event?.id || event?._id
 
@@ -60,6 +60,23 @@ export default function CommitteeEvents() {
     localStorage.setItem('committeeId', committeeId)
     fetchEvents()
   }, [committeeId])
+
+  const handleDeleteEvent = async eventId => {
+    if (!eventId) {
+      return
+    }
+
+    if (!window.confirm('Are you sure you want to delete this event?')) {
+      return
+    }
+
+    try {
+      await deleteEvent(eventId)
+      setEvents(prevEvents => prevEvents.filter(event => getEventId(event) !== eventId))
+    } catch (err) {
+      console.error('Failed to delete event', err)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -128,9 +145,22 @@ export default function CommitteeEvents() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="text-xl font-bold text-on-surface">{event.event_name}</h3>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                    Event
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                      Event
+                    </span>
+                    <button
+                      onClick={clickEvent => {
+                        clickEvent.stopPropagation()
+                        handleDeleteEvent(getEventId(event))
+                      }}
+                      className="text-red-500 transition hover:text-red-700"
+                      type="button"
+                      aria-label={`Delete ${event.event_name}`}
+                    >
+                      <span className="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
                 </div>
 
                 <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
