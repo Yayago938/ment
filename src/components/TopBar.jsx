@@ -67,18 +67,18 @@ export default function TopBar({
 
   return (
     <header
-      className={`glass-panel fixed top-0 z-40 flex h-20 items-center justify-between px-6 shadow-[0_20px_40px_rgba(123,110,246,0.08)] ${headerOffset} w-full`}
+      className={`glass-panel fixed top-0 z-40 flex h-20 items-center justify-between px-6 shadow-[0_20px_40px_rgba(123,110,246,0.08)] ${headerOffset} w-full border-b border-black/5`}
     >
       <div className={`flex flex-1 items-center ${contentOffset}`}>
 
         {/* 🔥 ONLY CHANGED BLOCK */}
         {isSearchPage ? (
-          <div className="relative w-full max-w-xl">
+          <div className="premium-search relative w-full max-w-xl transition-all duration-300 ease-out">
             <MaterialIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
               search
             </MaterialIcon>
             <input
-              className="w-full rounded-full border-none bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none transition-all focus:bg-white focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-full border border-black/5 bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none transition-all duration-300 ease-out hover:border-primary/10 hover:bg-white focus:border-primary/10 focus:bg-white focus:ring-2 focus:ring-primary/20"
               placeholder={placeholder}
               type="text"
               value={searchValue ?? ''}
@@ -86,12 +86,12 @@ export default function TopBar({
             />
           </div>
         ) : (
-          <Link to="/search" className="relative w-full max-w-xl block">
+          <Link to="/search" className="premium-search relative block w-full max-w-xl rounded-full">
             <MaterialIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
               search
             </MaterialIcon>
             <input
-              className="w-full cursor-pointer rounded-full border-none bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none"
+              className="w-full cursor-pointer rounded-full border border-black/5 bg-surface-container-low py-3 pl-12 pr-4 text-sm outline-none transition-all duration-300 ease-out hover:border-primary/10 hover:bg-white"
               placeholder={placeholder}
               type="text"
               readOnly
@@ -104,7 +104,7 @@ export default function TopBar({
       <button
         type="button"
         onClick={handleLogout}
-        className="ml-3 rounded-full bg-surface-container-low p-3 text-on-surface-variant transition-colors hover:bg-white hover:text-primary lg:hidden"
+        className="ml-3 rounded-full border border-black/5 bg-surface-container-low p-3 text-on-surface-variant transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-white hover:text-primary hover:shadow-sm lg:hidden"
         aria-label="Log out"
       >
         <MaterialIcon className="text-[20px]">logout</MaterialIcon>
@@ -117,14 +117,14 @@ export default function TopBar({
               <Link
                 key={action}
                 to={resolvedNotificationsTo}
-                className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-white hover:text-primary"
+                className="premium-glow rounded-full border border-transparent p-2 text-on-surface-variant transition-all duration-300 ease-out hover:border-black/5 hover:bg-white hover:text-primary hover:shadow-sm"
               >
                 <MaterialIcon>{action}</MaterialIcon>
               </Link>
             ) : (
               <button
                 key={action}
-                className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-white hover:text-primary"
+                className="premium-glow rounded-full border border-transparent p-2 text-on-surface-variant transition-all duration-300 ease-out hover:border-black/5 hover:bg-white hover:text-primary hover:shadow-sm"
               >
                 <MaterialIcon>{action}</MaterialIcon>
               </button>
@@ -134,7 +134,7 @@ export default function TopBar({
 
         <div className="h-8 w-px bg-outline-variant/30" />
 
-        <Link to={resolvedProfileTo} className="flex items-center gap-3">
+        <Link to={resolvedProfileTo} className="premium-glow flex items-center gap-3 rounded-full border border-transparent px-2 py-1 transition-all duration-300 ease-out hover:border-black/5 hover:bg-white/70">
           <div className="text-right">
             <p className="text-sm font-bold text-on-surface">{resolvedUserName}</p>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
@@ -142,7 +142,7 @@ export default function TopBar({
             </p>
           </div>
           <img
-            className="h-10 w-10 rounded-full object-cover ring-2 ring-white"
+            className="h-10 w-10 rounded-full object-cover ring-2 ring-white transition-transform duration-300 ease-out hover:scale-[1.03]"
             src={resolvedUserImage}
             alt={resolvedUserName}
           />
@@ -151,7 +151,7 @@ export default function TopBar({
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center gap-2 rounded-full bg-surface-container-low px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-white hover:text-primary"
+          className="premium-button premium-glow flex items-center gap-2 rounded-full border border-black/5 bg-surface-container-low px-4 py-2 text-sm font-bold text-on-surface-variant transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-white hover:text-primary hover:shadow-sm active:scale-[0.99]"
           aria-label="Log out"
         >
           <MaterialIcon className="text-[20px]">logout</MaterialIcon>

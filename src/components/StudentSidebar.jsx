@@ -10,7 +10,7 @@ const studentNav = [
 
 export default function StudentSidebar() {
   return (
-    <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col border-r border-white/40 bg-[#faf8ff] px-6 py-8 lg:flex">
+    <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col border-r border-black/5 bg-[#faf8ff] px-6 py-8 shadow-[8px_0_30px_rgba(123,110,246,0.04)] lg:flex">
       <div className="mb-12">
         <h1 className="font-headline text-2xl font-extrabold tracking-tight text-primary">MentorLink</h1>
         <p className="mt-1 text-xs font-semibold uppercase tracking-[0.24em] text-on-surface-variant">
@@ -24,10 +24,10 @@ export default function StudentSidebar() {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
+              `premium-nav-item ${isActive ? 'premium-nav-active' : ''} group flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-300 ease-out ${
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-on-surface-variant hover:bg-white hover:text-primary'
+                  ? 'border-primary/10 bg-white text-primary shadow-[0_10px_24px_rgba(123,110,246,0.10)]'
+                  : 'border-transparent text-on-surface-variant hover:border-black/5 hover:bg-white/90 hover:text-primary hover:shadow-sm hover:-translate-y-0.5'
               }`
             }
           >

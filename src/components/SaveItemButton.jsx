@@ -62,7 +62,7 @@ export default function SaveItemButton({
       type="button"
       onClick={handleClick}
       aria-label={saved ? 'Remove saved item' : 'Save item'}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-colors ${saved ? 'bg-primary-fixed text-primary' : 'bg-white/90 text-on-surface-variant hover:text-primary'} ${className}`}
+      className={`premium-button premium-glow inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/5 shadow-[0_10px_24px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out active:scale-[0.98] ${saved ? 'bg-primary-fixed text-primary ring-1 ring-primary/10 hover:bg-primary-fixed/90 hover:shadow-md hover:-translate-y-0.5' : 'bg-white/90 text-on-surface-variant hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-white hover:text-primary hover:shadow-md'} ${className}`}
     >
       <span className={`material-symbols-outlined ${iconClassName}`}>
         {saved ? 'bookmark' : 'bookmark_add'}

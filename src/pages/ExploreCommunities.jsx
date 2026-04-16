@@ -316,7 +316,7 @@ export default function ExploreCommunities() {
       <main className="px-4 pb-12 pt-24 lg:ml-64 lg:px-8 lg:pt-28">
         <div className="mx-auto flex max-w-[1440px] gap-8">
           <div className="flex-1 space-y-10">
-            <header className="relative overflow-hidden rounded-[28px] border border-outline-variant/10 bg-white px-6 py-5 shadow-[0_20px_40px_rgba(123,110,246,0.04)] lg:px-8 lg:py-6">
+            <header className="relative overflow-hidden rounded-[28px] border border-black/5 bg-white px-6 py-5 shadow-[0_20px_40px_rgba(123,110,246,0.06)] transition-all duration-300 ease-out lg:px-8 lg:py-6">
               <div className="relative z-10 max-w-3xl">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Search</span>
                 <h1 className="font-headline mt-2 text-3xl font-extrabold tracking-tight lg:text-4xl">Discover Clubs & Communities</h1>
@@ -337,22 +337,22 @@ export default function ExploreCommunities() {
               </div>
               <div className="grid gap-6 md:grid-cols-3">
                 {spotlightCommunities.map((club) => (
-                  <article key={club.id || club.title} className="relative rounded-[24px] border border-outline-variant/10 bg-white p-8 transition-all hover:shadow-xl">
+                  <article key={club.id || club.title} className="group relative rounded-[24px] border border-black/5 bg-white p-8 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md">
                     <div className="absolute right-6 top-6">
                       <SaveItemButton itemKey={`committee:${club.id || club.title}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
                     </div>
                     <Link to={club.id ? `/committee-detail/${club.id}` : '/committee-detail'} className="block">
                       <div className="mb-6 flex items-start justify-between">
-                        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${club.tone}`}>
+                        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ring-black/5 transition-transform duration-300 ease-out group-hover:scale-[1.03] ${club.tone}`}>
                           <span className="material-symbols-outlined scale-125">{club.icon}</span>
                         </div>
-                        <span className="rounded-full bg-surface-container-low px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]">{club.category}</span>
+                        <span className="rounded-full border border-black/5 bg-surface-container-low px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]">{club.category}</span>
                       </div>
                       <h3 className="font-headline text-xl font-bold">{club.title}</h3>
                       <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">{club.description}</p>
                       <div className="mt-6 flex items-center justify-between border-t border-outline-variant/10 pt-6">
                         <span className="text-xs font-bold text-on-surface-variant">{club.memberCount}</span>
-                        <span className="material-symbols-outlined text-outline-variant">arrow_forward</span>
+                        <span className="material-symbols-outlined text-outline-variant transition-transform duration-300 ease-out group-hover:translate-x-0.5">arrow_forward</span>
                       </div>
                     </Link>
                   </article>
@@ -369,12 +369,12 @@ export default function ExploreCommunities() {
               ) : null}
               <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
                 {upcomingEvents.map((event) => (
-                  <article key={event.id || event.title} className="relative overflow-hidden rounded-[24px] border border-outline-variant/10 bg-white">
+                  <article key={event.id || event.title} className="group relative overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md">
                     <div className="absolute right-4 top-4 z-10">
                       <SaveItemButton itemKey={`event:${event.id || event.title}`} className="h-9 w-9 bg-white shadow-none" iconClassName="text-[18px]" />
                     </div>
                     <div className="relative h-56 bg-surface-container-low">
-                      <div className="absolute left-4 top-4 rounded-xl bg-white/90 px-3 py-1.5 text-center shadow-lg">
+                      <div className="absolute left-4 top-4 rounded-xl border border-black/5 bg-white/90 px-3 py-1.5 text-center shadow-lg">
                         <span className="block text-xs font-bold leading-none">{event.month}</span>
                         <span className={`text-lg font-extrabold leading-none ${event.tone}`}>{event.day}</span>
                       </div>
@@ -385,10 +385,10 @@ export default function ExploreCommunities() {
                       <Link
                         to={event.id ? `/events/${event.id}` : '/events/portfolio-review'}
                         state={event.id ? { eventId: event.id } : undefined}
-                        className={`mt-8 inline-flex items-center gap-2 text-sm font-bold ${event.tone}`}
+                        className={`mt-8 inline-flex items-center gap-2 text-sm font-bold transition-all duration-300 ease-out ${event.tone}`}
                       >
                         View Details
-                        <span className="material-symbols-outlined">arrow_right_alt</span>
+                        <span className="material-symbols-outlined transition-transform duration-300 ease-out group-hover:translate-x-0.5">arrow_right_alt</span>
                       </Link>
                     </div>
                   </article>
