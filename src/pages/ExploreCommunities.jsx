@@ -315,28 +315,6 @@ export default function ExploreCommunities() {
 
       <main className="px-4 pb-12 pt-24 lg:ml-64 lg:px-8 lg:pt-28">
         <div className="mx-auto flex max-w-[1440px] gap-8">
-          <aside className="sticky top-28 hidden h-fit w-72 shrink-0 rounded-[28px] bg-surface-container-low p-8 lg:block">
-            <h2 className="font-headline text-xl font-bold">Refine Search</h2>
-            <div className="mt-8 space-y-8 text-sm">
-              <div>
-                <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant">Category</p>
-                <div className="space-y-3">
-                  {categoryOptions.map(({ label }, idx) => (
-                    <label key={label} className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(label)}
-                        onChange={handleCategoryChange(label)}
-                        className="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary/20"
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </aside>
-
           <div className="flex-1 space-y-10">
             <header className="relative overflow-hidden rounded-[28px] border border-outline-variant/10 bg-white px-6 py-5 shadow-[0_20px_40px_rgba(123,110,246,0.04)] lg:px-8 lg:py-6">
               <div className="relative z-10 max-w-3xl">

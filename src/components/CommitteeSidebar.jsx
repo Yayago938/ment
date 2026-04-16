@@ -39,12 +39,16 @@ export default function CommitteeSidebar() {
     },
     {
       key: 'profile',
-      path: '/committee/profile/edit',
+      path: committeeId ? `/committee/${committeeId}/profile/edit` : '/committee/profile/edit',
       icon: 'person',
       label: 'Committee Profile',
-      isActive: location.pathname.includes('/committee/profile'),
+      isActive: committeeId
+        ? location.pathname.includes(`/committee/${committeeId}/profile`)
+        : location.pathname.includes('/committee/profile'),
     },
   ]
+
+  const profileEditPath = committeeId ? `/committee/${committeeId}/profile/edit` : '/committee/profile/edit'
 
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col bg-[#f4f3fa] px-6 py-8 lg:flex">
@@ -88,7 +92,7 @@ export default function CommitteeSidebar() {
         New Event
       </button>
 
-      <Link to="/committee/profile/edit" className="mt-8 flex items-center gap-3 border-t border-outline-variant/20 pt-6">
+      <Link to={profileEditPath} className="mt-8 flex items-center gap-3 border-t border-outline-variant/20 pt-6">
         <img
           className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/10"
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlnMwMiijKv4SJYQ2_QLTHTAtBMGIIcsK_eIZFsEjO22G7PNZNaEemJvklXWhRzpTu7BbQdL3IS8dKkSEVZXMtLYv0tV_z3EwtyGj86ss0fDXNlY5J9Oe7kwgRs5Q0H1pbzlOMduQGuWiwtoYGWa1QKvqkRdfBRI7hILUxI1FLP05GSkj77_bLGakapEmdHcNzlf7T7Ju6lPSMIux-6N5yEBzkN5K_uc11oPeQV67J4pDbaEU1QrCT2SscFxRQ5LPiwjNDhmv3Acg"

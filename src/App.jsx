@@ -50,7 +50,7 @@ export default function App() {
         }
       />
       <Route
-        path="/committee/profile/edit"
+        path="/committee/:id/profile/edit"
         element={
           <ProtectedRoute role="committee">
             <CommitteeProfileEdit />

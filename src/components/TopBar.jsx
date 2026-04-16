@@ -1,5 +1,5 @@
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import MaterialIcon from './MaterialIcon'
 
 const buildAvatarFallback = name => {
@@ -27,6 +27,7 @@ export default function TopBar({
   notificationsTo,
   profileTo,
 }) {
+  const navigate = useNavigate()
   const storedUserName = localStorage.getItem('userName') || 'Student'
   const storedUserRole = localStorage.getItem('userRoleLabel') || 'Student'
   const storedUserImage = localStorage.getItem('userImage') || localStorage.getItem('profileImage') || ''
@@ -45,6 +46,24 @@ export default function TopBar({
 
   // 🔥 ONLY NEW LINE (detect search page)
   const isSearchPage = window.location.pathname === "/search"
+
+  const handleLogout = () => {
+    [
+      'token',
+      'role',
+      'studentId',
+      'committeeId',
+      'userName',
+      'userEmail',
+      'userRoleLabel',
+      'userImage',
+      'profileImage',
+      'onboardingCompleted',
+      'profileCompleted',
+    ].forEach(key => localStorage.removeItem(key))
+
+    navigate('/login', { replace: true })
+  }
 
   return (
     <header
@@ -81,6 +100,15 @@ export default function TopBar({
         )}
 
       </div>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="ml-3 rounded-full bg-surface-container-low p-3 text-on-surface-variant transition-colors hover:bg-white hover:text-primary lg:hidden"
+        aria-label="Log out"
+      >
+        <MaterialIcon className="text-[20px]">logout</MaterialIcon>
+      </button>
 
       <div className="hidden items-center gap-5 lg:flex">
         <div className="flex items-center gap-2">
@@ -119,6 +147,16 @@ export default function TopBar({
             alt={resolvedUserName}
           />
         </Link>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-2 rounded-full bg-surface-container-low px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-white hover:text-primary"
+          aria-label="Log out"
+        >
+          <MaterialIcon className="text-[20px]">logout</MaterialIcon>
+          Logout
+        </button>
       </div>
     </header>
   )
