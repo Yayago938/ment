@@ -8,12 +8,10 @@
 @layer base {
   * {
     box-sizing: border-box;
-    @apply border-border outline-ring/50;
   }
 
   html {
     scroll-behavior: smooth;
-    @apply font-sans;
   }
 
   body {
@@ -26,7 +24,6 @@
     color: #1a1b20;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    @apply bg-background text-foreground;
   }
 
   a {
