@@ -96,22 +96,22 @@ export const addHeadToCommittee = async (data) => {
   return res.data
 }
 
-export const deleteMemberFromCommittee = async ({ committeeId, memberId }) => {
+export const deleteMemberFromCommittee = async ({ committeeId, student_email }) => {
   const res = await api.delete("/committee/deleteMemberFromCommittee", {
     data: {
       committeeId,
-      memberId,
+      student_email,
     },
   });
 
   return res.data;
 };
 
-export const deleteHeadFromCommittee = async ({ committeeId, headId }) => {
+export const deleteHeadFromCommittee = async ({ committeeId, head_email }) => {
   const res = await api.delete("/committee/deleteHeadFromCommittee", {
     data: {
       committeeId,
-      headId,
+      head_email,
     },
   });
 

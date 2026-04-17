@@ -133,7 +133,7 @@ export default function App() {
         }
       />
       <Route
-        path="/events/new"
+        path="/committee/:id/events/new"
         element={
           <ProtectedRoute role="committee">
             <CreateEvent />
