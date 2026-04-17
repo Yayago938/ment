@@ -25,11 +25,12 @@ import SignUpLogin from './pages/SignUpLogin'
 import StudentDashboard from './pages/StudentDashboard'
 import StudentProfile from './pages/StudentProfile'
 import Search from './pages/Search'
+import LandingPage from './pages/LandingPage'
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage/>} />
       <Route path="/login" element={<SignUpLogin />} />
       <Route
         path="/admin-dashboard"

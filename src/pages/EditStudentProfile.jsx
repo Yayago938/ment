@@ -594,33 +594,29 @@ export default function EditStudentProfile() {
 
   <div className="mt-6 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-6">
 
-    {/* Hidden Input */}
     <input
-      type="file"
-      accept=".pdf,.doc,.docx"
-      id="resumeUpload"
-      className="hidden"
-      onChange={(e) => handleResumeUpload(e.target.files[0])}
+      type="text"
+      placeholder="Paste resume link (Google Drive / etc)"
+      className="w-full border rounded-xl px-4 py-2"
+      value={form.resume_url}
+      onChange={(e) => handleChange('resume_url', e.target.value)}
     />
 
-    {/* Upload Button */}
-    <label
-      htmlFor="resumeUpload"
-      className="cursor-pointer text-purple-600 font-semibold"
-    >
-      Click to upload resume
-    </label>
-
     <p className="text-sm text-gray-500 mt-2">
-      PDF, DOC up to 5MB
+      Upload resume to Drive and paste link here
     </p>
 
     {/* Preview */}
     {form.resume_url && (
-  <div className="mt-4 text-sm text-green-600">
-    {form.resume_url}
-  </div>
-)}
+      <a
+        href={form.resume_url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-4 text-purple-600 text-sm"
+      >
+        View Resume
+      </a>
+    )}
   </div>
 </section>
 </div>
