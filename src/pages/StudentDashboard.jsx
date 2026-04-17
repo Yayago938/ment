@@ -5,6 +5,7 @@ import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
 import SaveItemButton from '../components/SaveItemButton'
 import ScheduleCalendarModal from '../components/ScheduleCalendarModal'
+import GlassBlobCard from '../components/GlassBlobCard'
 import api from '../api/axios'
 import { getAllCommittees } from '../api/committeeApi'
 import { getAllEvents } from '../api/eventApi'
@@ -514,7 +515,7 @@ export default function StudentDashboard() {
 
         <section className="mt-8 grid gap-6 md:grid-cols-3">
           {stats.map((stat) => (
-            <article key={stat.label} className="premium-card premium-glow editorial-shadow flex items-center gap-5 rounded-[24px] border border-black/5 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md">
+            <GlassBlobCard key={stat.label} className="editorial-shadow flex items-center gap-5 border-black/5 p-6">
               <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ring-black/5 ${stat.tone}`}>
                 <MaterialIcon className="text-3xl">{stat.icon}</MaterialIcon>
               </div>
@@ -522,7 +523,7 @@ export default function StudentDashboard() {
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">{stat.label}</p>
                 <h2 className="mt-1 font-headline text-3xl font-extrabold">{stat.value}</h2>
               </div>
-            </article>
+            </GlassBlobCard>
           ))}
         </section>
 

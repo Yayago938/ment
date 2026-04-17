@@ -90,6 +90,7 @@ export default function App() {
       <Route path="/recommendations" element={<Recommendations />} />
       <Route path="/edit-student-profile" element={<EditStudentProfile />} />
       <Route path="/profile" element={<StudentProfile />} />
+      <Route path="/profile/:id" element={<StudentProfile />} />
       <Route path="/profile/edit" element={<EditStudentProfile />} />
       <Route
         path="/committee-dashboard"

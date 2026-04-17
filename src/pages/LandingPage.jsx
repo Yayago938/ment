@@ -1,138 +1,126 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import Aurora from "../components/Aurora";
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import Aurora from '../components/Aurora'
+import GlassBlobCard from '../components/GlassBlobCard'
 
 export default function LandingPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+
+  const miniCards = [
+    ['Discover', 'Find clubs, committees, and student communities.'],
+    ['Engage', 'Register for events and follow campus activity.'],
+    ['Grow', 'Build a profile that opens the right doors.'],
+  ]
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-    
+    <div className="relative h-screen w-full overflow-hidden text-white">
       <div className="absolute inset-0 z-0">
         <Aurora
-          colorStops={["#FEADC8", "#5545CE", "#4E4094"]}
-          amplitude={1.2}
-          blend={0.6}
-          speed={1.0}
+          colorStops={['#FEADC8', '#5545CE', '#4E4094']}
+          amplitude={1.1}
+          blend={0.62}
+          speed={0.9}
         />
       </div>
 
-   
-      <div className="absolute top-5 left-4 right-4 md:left-8 md:right-8 flex items-center justify-between z-20 text-white font-medium">
-        <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-xl">
-          <div className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center font-bold">
+      <nav className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between font-medium md:left-8 md:right-8">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/12 px-3 py-2 shadow-[0_12px_32px_rgba(20,10,80,0.16)] backdrop-blur-xl transition hover:bg-white/18"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/18 font-bold shadow-inner">
             M
-          </div>
-          <span className="font-semibold tracking-wide text-base">MentorLink</span>
-        </div>
+          </span>
+          <span className="text-sm font-semibold tracking-wide md:text-base">MentorLink</span>
+        </button>
 
-        <div className="flex items-center gap-4 md:gap-6">
+        <div className="flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 p-1 backdrop-blur-xl">
           <button
-            onClick={() => navigate("/")}
-            className="text-sm md:text-base hover:text-[#FEADC8] transition"
+            type="button"
+            onClick={() => navigate('/')}
+            className="rounded-xl px-4 py-2 text-sm transition hover:bg-white/14"
           >
             Home
           </button>
-
           <button
-            onClick={() => navigate("/login")}
-            className="px-4 md:px-5 py-2 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white hover:text-black transition text-sm md:text-base"
+            type="button"
+            onClick={() => navigate('/login')}
+            className="rounded-xl border border-white/25 bg-white/18 px-4 py-2 text-sm transition hover:bg-white hover:text-[#1a1b20]"
           >
             Login
           </button>
         </div>
-      </div>
+      </nav>
 
-     
-      <div className="relative z-10 h-full flex flex-col justify-center px-4 md:px-6 pt-20 pb-6 text-white">
-        <div className="w-full max-w-6xl mx-auto">
-         
-          <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-white/[0.08] backdrop-blur-2xl shadow-[0_20px_80px_rgba(40,20,120,0.25)]">
-            
-            <div className="absolute -top-16 -left-16 h-40 w-40 rounded-full bg-pink-300/20 blur-3xl" />
-            <div className="absolute -bottom-16 -right-12 h-52 w-52 rounded-full bg-violet-400/20 blur-3xl" />
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-white/[0.02]" />
+      <main className="relative z-10 flex h-full items-center px-4 pb-5 pt-20 md:px-6 md:pb-7 md:pt-24">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 md:gap-4">
+          <section className="relative overflow-hidden rounded-[28px] border border-white/18 bg-white/[0.10] px-5 py-6 text-center shadow-[0_24px_90px_rgba(40,20,120,0.28)] backdrop-blur-2xl md:px-10 md:py-8 lg:px-14 lg:py-9">
+            <div className="absolute -left-16 -top-16 h-44 w-44 rounded-full bg-pink-300/20 blur-3xl" />
+            <div className="absolute -bottom-20 right-0 h-56 w-56 rounded-full bg-violet-300/20 blur-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.03]" />
 
-            <div className="relative z-10 px-6 py-8 md:px-10 md:py-10 lg:px-14 lg:py-12 text-center">
-              <p className="mb-4 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] md:text-xs font-medium tracking-wide backdrop-blur-md">
-                Campus Communities • Events • Opportunities • Mentorship
+            <div className="relative z-10">
+              <p className="mb-3 inline-flex items-center rounded-full border border-white/20 bg-white/12 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md md:text-xs">
+                Campus communities, events, opportunities
               </p>
 
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-none">
+              <h1 className="font-headline text-4xl font-extrabold leading-none tracking-tight md:text-6xl lg:text-7xl">
                 MentorLink
               </h1>
 
-              <p className="mt-4 max-w-3xl mx-auto text-sm md:text-lg text-white/90 leading-relaxed">
-                Discover clubs, explore events, apply to opportunities, and build
-                meaningful campus connections — all from one student portal.
+              <p className="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-white/90 md:text-lg">
+                Discover clubs, explore events, apply to opportunities, and build meaningful campus connections from one student portal.
               </p>
 
-              
-              <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+              <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row md:mt-6">
                 <button
-                  onClick={() => navigate("/explore")}
-                  className="px-6 py-3 bg-[#5545CE] text-white font-semibold rounded-xl shadow-lg hover:bg-[#4a3cb0] hover:scale-[1.03] transition"
+                  type="button"
+                  onClick={() => navigate('/explore')}
+                  className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#5545CE] shadow-lg transition hover:scale-[1.02] hover:bg-white/92 md:text-base"
                 >
                   Get Started
                 </button>
 
                 <button
-                  onClick={() => navigate("/login")}
-                  className="px-6 py-3 border border-white/30 bg-white/5 rounded-xl hover:bg-white hover:text-black transition"
+                  type="button"
+                  onClick={() => navigate('/login')}
+                  className="rounded-xl border border-white/30 bg-white/8 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white hover:text-[#1a1b20] md:text-base"
                 >
                   Learn More
                 </button>
               </div>
 
-           
-              <div className="mt-6 flex flex-wrap justify-center gap-2.5 text-xs md:text-sm text-white/90">
-                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-md">
-                  Explore Communities
-                </span>
-                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-md">
-                  Track Applications
-                </span>
-                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-md">
-                  Register for Events
-                </span>
-                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-md">
-                  Find Student Matches
-                </span>
+              <div className="mt-5 flex flex-wrap justify-center gap-2 text-xs text-white/90 md:text-sm">
+                {['Explore Communities', 'Track Applications', 'Register for Events', 'Find Student Matches'].map(item => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-white/18 bg-white/10 px-3 py-1.5 backdrop-blur-md"
+                  >
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
-          </div>
+          </section>
 
-          
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="rounded-3xl border border-white/15 bg-white/[0.08] backdrop-blur-xl px-5 py-4 shadow-[0_10px_40px_rgba(40,20,120,0.15)]">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-white/60 font-semibold">
-                Discover
-              </p>
-              <p className="mt-2 text-sm md:text-base font-semibold text-white leading-snug">
-                Explore clubs, committees & communities
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-white/15 bg-white/[0.08] backdrop-blur-xl px-5 py-4 shadow-[0_10px_40px_rgba(40,20,120,0.15)]">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-white/60 font-semibold">
-                Engage
-              </p>
-              <p className="mt-2 text-sm md:text-base font-semibold text-white leading-snug">
-                Register for events & stay updated
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-white/15 bg-white/[0.08] backdrop-blur-xl px-5 py-4 shadow-[0_10px_40px_rgba(40,20,120,0.15)]">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-white/60 font-semibold">
-                Grow
-              </p>
-              <p className="mt-2 text-sm md:text-base font-semibold text-white leading-snug">
-                Build your profile & meaningful connections
-              </p>
-            </div>
-          </div>
+          <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {miniCards.map(([label, text]) => (
+              <GlassBlobCard
+                key={label}
+                className="border-white/18 bg-white/[0.10] px-5 py-3.5 text-white shadow-[0_12px_36px_rgba(40,20,120,0.18)] md:py-4"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/60">
+                  {label}
+                </p>
+                <p className="mt-1.5 text-sm font-semibold leading-snug md:text-base">
+                  {text}
+                </p>
+              </GlassBlobCard>
+            ))}
+          </section>
         </div>
-      </div>
+      </main>
     </div>
-  );
+  )
 }

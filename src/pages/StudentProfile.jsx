@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { FaLinkedin, FaGithub, FaGlobe, FaInstagram } from "react-icons/fa"
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
@@ -105,14 +105,18 @@ const getExperienceDisplay = exp => ({
 
 // ---------- COMPONENT ----------
 export default function StudentProfile() {
+  const { id } = useParams()
+  const location = useLocation()
   const [student, setStudent] = useState(null)
   const [committees, setCommittees] = useState([])
   const [loading, setLoading] = useState(true)
+  const isPublicProfile = Boolean(id)
 
   useEffect(() => {
     const fetchData = async () => {
-      const studentId = localStorage.getItem('studentId')
+      const studentId = id || localStorage.getItem('studentId')
       const fallback = buildFallbackStudent(studentId)
+      const routedStudent = location.state?.student
 
       const [cRes, sRes] = await Promise.allSettled([
         getAllCommittees(),
@@ -126,9 +130,9 @@ export default function StudentProfile() {
       let studentData =
         sRes.status === 'fulfilled'
           ? normalizeStudentResponse(sRes.value)
-          : null
+          : routedStudent || null
 
-      if (!studentData && sRes.status === 'rejected') {
+      if (!studentData && !isPublicProfile && sRes.status === 'rejected') {
         try {
           const created = await createStudentProfile(
             buildCreateStudentPayload(studentId)
@@ -142,7 +146,7 @@ export default function StudentProfile() {
     }
 
     fetchData()
-  }, [])
+  }, [id, isPublicProfile, location.state])
 
   const skills = normalizeArrayField(student?.skills)
   const interests = normalizeArrayField(student?.interests_hobbies)
@@ -189,12 +193,14 @@ export default function StudentProfile() {
          </p>
         </div>
 
-       <Link
-        to="/edit-student-profile"
-         className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition"
-       >
-       Edit Profile
-       </Link>
+       {!isPublicProfile && (
+        <Link
+          to="/edit-student-profile"
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition"
+        >
+          Edit Profile
+        </Link>
+       )}
       </div>
         <div className="grid grid-cols-12 gap-6">
 
