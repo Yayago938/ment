@@ -199,7 +199,7 @@ export default function SignUpLogin() {
 
   return (
     <main className="flex h-screen overflow-hidden">
-      {/* Left Side: Aesthetic Editorial Section */}
+     
       <section className="hidden lg:flex lg:w-1/2 relative bg-surface-container-low  overflow-hidden items-center justify-center p-8 xl:p-10">
         <div className="absolute inset-0 z-0">
           <img
@@ -214,18 +214,18 @@ export default function SignUpLogin() {
             <span className="material-symbols-outlined text-primary text-lg">workspace_premium</span>
             <span className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase">Ethereal Academic Excellence</span>
           </div>
-          <h1 className="font-headline font-extrabold text-4xl xl:text-6xl tracking-tighter text-on-surface leading-[1.1] mb-4 xl:mb-6">
+          <h1 className="font-headline font-extrabold text-3xl xl:text-5xl tracking-tighter text-on-surface leading-[1.1] mb-3 xl:mb-5">
             MentorLink: The Digital <span className="text-primary italic">Atelier</span> of Minds
           </h1>
-          <p className="text-on-surface-variant text-base xl:text-lg leading-relaxed mb-6 xl:mb-6 max-w-md">
+          <p className="text-on-surface-variant text-sm xl:text-base leading-relaxed mb-5 xl:mb-5 max-w-md">
             Where prestigious mentorship meets modern ambition. Join a curated ecosystem of scholarly leaders and professional artisans.
           </p>
         </div>
       </section>
 
-      {/* Right Side: Auth Form Section */}
-      <section className="w-full lg:w-1/2 bg-surface flex flex-col justify-between p-6 md:p-8 xl:p-10 overflow-y-auto">
-        <div className="flex justify-center items-center mb-6 xl:mb-6">
+      
+      <section className="w-full lg:w-1/2 bg-surface flex flex-col justify-center pt-8 md:pt-10 xl:pt-12 pb-4 md:pb-5 xl:pb-6 px-4 md:px-5 xl:px-6 overflow-hidden">
+        <div className="flex justify-center items-center mb-3 xl:mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 xl:w-10 xl:h-10 bg-gradient-to-br from-primary to-secondary-container rounded-xl flex items-center justify-center shadow-lg">
               <span className="material-symbols-outlined text-white filled-icon">architecture</span>
@@ -234,13 +234,13 @@ export default function SignUpLogin() {
           </div>
         </div>
 
-        <div className="max-w-md w-full mx-auto">
-          {/* Tab Toggle */}
-          <div className="bg-surface-container-lowest rounded-lg p-1 px-1 mb-5 xl:mb-8 shadow-ambient">
+        <div className="max-w-md w-full mx-auto mt-2 xl:mt-3">
+      
+          <div className="bg-surface-container-lowest rounded-lg p-1 px-1 mb-4 xl:mb-5 shadow-ambient">
             <div className="flex p-1 gap-1">
               <button
                 onClick={() => setActiveTab('login')}
-                className={`flex-1 py-2 xl:py-3 text-sm font-medium rounded-full transition-all ${
+                className={`flex-1 py-2 xl:py-2.5 text-sm font-medium rounded-full transition-all ${
                   activeTab === 'login'
                     ? 'bg-primary text-white font-bold'
                     : 'text-on-surface-variant hover:bg-surface-container-low'
@@ -262,14 +262,7 @@ export default function SignUpLogin() {
           </div>
 
           <div className="text-center mb-5 xl:mb-8">
-            {/* <h2 className="font-headline font-bold text-2xl xl:text-3xl text-on-surface mb-1 xl:mb-2">
-              {activeTab === 'signup' ? 'Create Account' : 'Committee Login'}
-            </h2> */}
-            {/* <p className="text-on-surface-variant text-sm xl:text-base">
-              {activeTab === 'signup'
-                ? 'Join the curated ecosystem of scholarly leaders.'
-                : 'Sign in to access your committee dashboard.'}
-            </p> */}
+            
           </div>
 
           {activeTab === 'login' && (
@@ -302,39 +295,45 @@ export default function SignUpLogin() {
             </div>
           )}
 
-          <form className="space-y-3 xl:space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-2 xl:space-y-2.5" onSubmit={handleSubmit}>
             {activeTab === 'signup' && (
               <>
-                <div className="space-y-1 xl:space-y-2">
-                  <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">SAP ID</label>
+                <div className="space-y-1 xl:space-y-1.5">
+                  <label className="text-[11px] font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">SAP ID</label>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">badge</span>
-                    <input className="w-full pl-12 pr-4 py-2.5 xl:py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="sapId" placeholder="Enter your SAP ID" type="text" value={signupForm.sapId} onChange={handleSignupChange} />
+                    <input className="w-full pl-12 pr-4 py-2.5 xl:py-3 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="sapId" placeholder="Enter your SAP ID" type="text" value={signupForm.sapId} onChange={handleSignupChange} />
                   </div>
                 </div>
                 <div className="space-y-1 xl:space-y-2">
-                  <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Full Name</label>
+                  <label className="text-[11px] font-label font-bold tracking-widest text-on-surface-variant uppercase ml-">Full Name</label>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">person</span>
-                    <input className="w-full pl-12 pr-4 py-2.5 xl:py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="fullName" placeholder="Jane Doe" type="text" value={signupForm.fullName} onChange={handleSignupChange} />
+                    <input className="w-full pl-12 pr-4 py-2.5 xl:py-3 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="fullName" placeholder="Jane Doe" type="text" value={signupForm.fullName} onChange={handleSignupChange} />
                   </div>
                 </div>
               </>
             )}
 
             <div className="space-y-1 xl:space-y-2">
-              <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">University Email</label>
+              <label className="text-[11px] font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">
+  {activeTab === 'login' && role === 'committee' ? 'Committee Email' : 'University Email'}
+</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">alternate_email</span>
-                <input className="w-full pl-12 pr-4 py-2.5 xl:py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="email" placeholder="jane.doe@university.edu" type="email" value={activeTab === 'signup' ? signupForm.email : loginForm.email} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
+                <input className="w-full pl-12 pr-4 py-2.5 xl:py-3 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="email" placeholder={
+  activeTab === 'login' && role === 'committee'
+    ? 'committee@mentorlink.edu'
+    : 'jane.doe@university.edu'
+} type="email" value={activeTab === 'signup' ? signupForm.email : loginForm.email} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
               </div>
             </div>
 
             <div className="space-y-1 xl:space-y-2">
-              <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Password</label>
+              <label className="text-[11px] font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Password</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">lock</span>
-                <input className="w-full pl-12 pr-12 py-2.5 xl:py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="password" placeholder="........" type={activeTab === 'signup' ? (showPasswords.signup ? 'text' : 'password') : (showPasswords.login ? 'text' : 'password')} value={activeTab === 'signup' ? signupForm.password : loginForm.password} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
+                <input className="w-full pl-12 pr-12 py-2.5 xl:py-3 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="password" placeholder="........" type={activeTab === 'signup' ? (showPasswords.signup ? 'text' : 'password') : (showPasswords.login ? 'text' : 'password')} value={activeTab === 'signup' ? signupForm.password : loginForm.password} onChange={activeTab === 'signup' ? handleSignupChange : handleLoginChange} />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility(activeTab === 'signup' ? 'signup' : 'login')}
@@ -357,7 +356,7 @@ export default function SignUpLogin() {
                 <label className="text-xs font-label font-bold tracking-widest text-on-surface-variant uppercase ml-4">Confirm Password</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">lock_reset</span>
-                  <input className="w-full pl-12 pr-12 py-2.5 xl:py-3.5 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="confirmPassword" placeholder="........" type={showPasswords.confirm ? 'text' : 'password'} value={signupForm.confirmPassword} onChange={handleSignupChange} />
+                  <input className="w-full pl-12 pr-12 py-2.5 xl:py-3 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none text-on-surface text-sm" name="confirmPassword" placeholder="........" type={showPasswords.confirm ? 'text' : 'password'} value={signupForm.confirmPassword} onChange={handleSignupChange} />
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('confirm')}
@@ -379,7 +378,7 @@ export default function SignUpLogin() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="block w-full py-3 xl:py-4 mt-2 xl:mt-4 bg-gradient-to-r from-primary to-secondary-container text-white font-bold rounded-full shadow-primary-glow hover:scale-[1.02] transition-transform duration-300 text-center disabled:opacity-70 disabled:hover:scale-100 text-sm xl:text-base"
+              className="block w-full py-3 xl:py-3.5 mt-2 xl:mt-3 bg-gradient-to-r from-primary to-secondary-container text-white font-bold rounded-full shadow-primary-glow hover:scale-[1.02] transition-transform duration-300 text-center disabled:opacity-70 disabled:hover:scale-100 text-sm xl:text-base"
             >
               {isSubmitting
                 ? activeTab === 'signup'
@@ -393,14 +392,14 @@ export default function SignUpLogin() {
             </button>
           </form>
 
-          <div className="relative my-5 xl:my-6 text-center">
+          <div className="relative my-4 xl:my-4 text-center">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-outline-variant/30"></div>
             </div>
             <span className="relative px-4 bg-surface text-xs font-label font-bold tracking-widest text-on-surface-variant/50 uppercase">Or continue with</span>
           </div>
 
-          <button className="w-full py-3 xl:py-4 bg-surface-container-low hover:bg-surface-container-high text-on-surface font-medium rounded-full flex items-center justify-center gap-3 transition-colors text-sm xl:text-base">
+          <button className="w-full py-3 xl:py-3.5 bg-surface-container-low hover:bg-surface-container-high text-on-surface font-medium rounded-full flex items-center justify-center gap-3 transition-colors text-sm xl:text-base">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -411,13 +410,7 @@ export default function SignUpLogin() {
           </button>
         </div>
 
-        <footer className="mt-6 xl:mt-6 flex flex-wrap justify-center gap-x-8 gap-y-4">
-          <a className="text-xs font-label font-bold tracking-widest text-on-surface-variant/60 uppercase hover:text-primary transition-colors" href="#">Terms of Service</a>
-          <a className="text-xs font-label font-bold tracking-widest text-on-surface-variant/60 uppercase hover:text-primary transition-colors" href="#">Privacy Policy</a>
-          <a className="text-xs font-label font-bold tracking-widest text-on-surface-variant/60 uppercase hover:text-primary transition-colors" href="#">Cookie Settings</a>
-          <a className="text-xs font-label font-bold tracking-widest text-on-surface-variant/60 uppercase hover:text-primary transition-colors" href="#">Help Center</a>
-          <p className="w-full text-center text-[10px] text-on-surface-variant/40 mt-4">© 2024 MentorLink Global. All rights reserved.</p>
-        </footer>
+       
       </section>
     </main>
   )
