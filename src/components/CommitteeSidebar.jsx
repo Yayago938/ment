@@ -29,13 +29,13 @@ export default function CommitteeSidebar() {
     },
     {
       key: 'events',
-      path: committeeId ? `${basePath}/events` : '/events/new',
+      path: committeeId ? `${basePath}/events` : '/committee-dashboard',
       icon: 'event',
       filled: true,
       label: 'Events',
       isActive: committeeId
-        ? location.pathname.includes(`${basePath}/events`) || location.pathname.startsWith('/events/edit') || location.pathname === '/events/new'
-        : location.pathname === '/events/new',
+        ? location.pathname.includes(`${basePath}/events`) || location.pathname === `/committee/${committeeId}/events/new` || location.pathname.startsWith('/events/edit')
+        : false,
     },
     {
       key: 'profile',
@@ -86,7 +86,7 @@ export default function CommitteeSidebar() {
 
       <button
         type="button"
-        onClick={() => navigate('/events/new')}
+        onClick={() => navigate(committeeId ? `/committee/${committeeId}/events/new` : '/committee-dashboard')}
         className="gradient-pill mt-auto rounded-full px-6 py-4 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
       >
         New Event

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
 import TopBar from '../components/TopBar'
-import { getEventRegistrations } from '../api/eventApi'
+import { getEventById, getEventRegistrations } from '../api/eventApi'
 
 const normalizeRegistrations = payload => {
   if (Array.isArray(payload)) {
@@ -38,15 +38,27 @@ const getRegistrantEmail = registration =>
   'No email provided'
 
 export default function EventRegistrations() {
+  const [event, setEvent] = useState(null)
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const navigate = useNavigate()
-  const location = useLocation()
   const { eventId } = useParams()
-  const event = location.state?.event
   const committeeId = localStorage.getItem('committeeId')
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        const res = await getEventById(eventId)
+        setEvent(res)
+      } catch (err) {
+        console.error('Failed to fetch event', err)
+      }
+    }
+
+    if (eventId) fetchEvent()
+  }, [eventId])
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -93,11 +105,11 @@ export default function EventRegistrations() {
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/70">
                 Event Registrations
               </p>
-              <h1 className="mt-4 font-headline text-4xl font-extrabold tracking-tight lg:text-5xl">
-                {event?.event_name || 'Event Registration List'}
+              <h1 className="mt-4 text-3xl font-bold lg:text-5xl">
+                {event?.event_name || 'Loading Event...'}
               </h1>
-              <p className="mt-3 text-lg text-white/90">
-                Review everyone who has signed up for this event in one place.
+              <p className="mt-3 text-sm text-gray-500">
+                Registrations for this event
               </p>
             </div>
 

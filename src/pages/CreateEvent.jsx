@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
 import { createEvent } from '../api/eventApi'
 
@@ -18,7 +18,6 @@ const initialFormData = {
   event_date: '',
   event_time: '',
   tags: '',
-  committeeId: '',
   registration_deadline: '',
   questions: [initialQuestion],
 }
@@ -44,6 +43,8 @@ const buildRegistrationQuestions = questions =>
 
 export default function CreateEvent() {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const committeeId = id || localStorage.getItem('committeeId')
   const [formData, setFormData] = useState(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -106,6 +107,12 @@ export default function CreateEvent() {
     setIsSubmitting(true)
     setErrorMessage('')
 
+    if (!committeeId) {
+      setErrorMessage('Committee ID is missing. Please open this page from your committee dashboard.')
+      setIsSubmitting(false)
+      return
+    }
+
     const payload = {
       event_name: formData.event_name.trim(),
       description: formData.description.trim(),
@@ -113,7 +120,7 @@ export default function CreateEvent() {
       event_date: new Date(formData.event_date).toISOString(),
       event_time: `${formData.event_time}:00`,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      committeeId: formData.committeeId.trim(),
+      committeeId,
       registration_deadline: new Date(formData.registration_deadline).toISOString(),
       registration_questions: buildRegistrationQuestions(formData.questions),
     }
@@ -138,31 +145,9 @@ export default function CreateEvent() {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
-      <nav className="fixed left-0 top-0 z-50 flex h-20 w-full items-center justify-between bg-white/80 px-8 shadow-[0_20px_40px_rgba(123,110,246,0.08)] backdrop-blur-xl">
-        <div className="flex items-center gap-4">
-          <span className="bg-gradient-to-r from-[#7B6EF6] to-[#F6A6C1] bg-clip-text font-headline text-2xl font-bold tracking-tight text-transparent">
-            Aura Committee
-          </span>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="hidden items-center gap-8 md:flex">
-            <Link className="font-medium text-on-surface-variant transition-colors hover:text-primary" to="/committee-dashboard">
-              Dashboard
-            </Link>
-            <Link className="font-medium text-on-surface-variant transition-colors hover:text-primary" to="/applications">
-              Applications
-            </Link>
-            <span className="border-b-2 border-primary font-bold text-primary">Events</span>
-            <Link className="font-medium text-on-surface-variant transition-colors hover:text-primary" to="/committee/profile">
-              Profile
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       <CommitteeSidebar />
 
-      <main className="px-8 pb-20 pt-28 lg:ml-64">
+      <main className="px-8 py-12 lg:ml-64">
         <div className="mx-auto max-w-5xl">
           <header className="mb-12 flex flex-wrap items-end justify-between gap-6">
             <div>
@@ -213,10 +198,6 @@ export default function CreateEvent() {
                       <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-outline transition-colors group-focus-within:text-primary">location_on</span>
                       <input name="venue" value={formData.venue} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low py-4 pl-14 pr-6 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="Enter physical address or virtual meeting link" type="text" required />
                     </div>
-                  </div>
-                  <div>
-                    <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Committee ID</label>
-                    <input name="committeeId" value={formData.committeeId} onChange={handleChange} className="w-full rounded-full border-none bg-surface-container-low px-6 py-4 text-on-surface transition-all focus:bg-white focus:ring-2 focus:ring-primary" placeholder="Committee UUID" type="text" required />
                   </div>
                   <div>
                     <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-on-surface-variant">Tags</label>

@@ -106,7 +106,7 @@ export default function CommitteeEvents() {
             </div>
 
             <Link
-              to="/events/new"
+              to={committeeId ? `/committee/${committeeId}/events/new` : '/committee-dashboard'}
               className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-bold text-on-surface transition-transform hover:scale-[1.02]"
             >
               Create New Event

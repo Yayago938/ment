@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
 import { useToast } from '../components/ToastProvider'
 import {
+  addHeadToCommittee,
+  addMemberToCommittee,
   getCommitteeById,
   getCommitteeHeads,
   getCommitteeMembers,
@@ -45,19 +47,16 @@ const normalizePeople = data => {
 }
 
 const getPersonName = person =>
-  person?.name ||
-  person?.fullName ||
   person?.student_name ||
-  person?.student?.name ||
+  person?.students?.name ||
+  person?.name ||
   person?.student_id ||
   'Unnamed'
 
-const getPersonEmail = person =>
-  person?.email ||
-  person?.student_email ||
-  person?.student?.email ||
-  person?.role_title ||
-  ''
+const getPersonImage = person =>
+  person?.students?.profile_picture_url ||
+  person?.profile_picture_url ||
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(getPersonName(person))}`
 
 export default function CommitteeProfileEdit() {
   const { id } = useParams()
@@ -67,6 +66,12 @@ export default function CommitteeProfileEdit() {
   const [heads, setHeads] = useState([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [newMemberEmail, setNewMemberEmail] = useState('')
+  const [newHead, setNewHead] = useState({
+    email: '',
+    role_title: '',
+    role_type: 'CORE',
+  })
 
   useEffect(() => {
     if (!id) {
@@ -120,12 +125,71 @@ export default function CommitteeProfileEdit() {
     setSaving(true)
 
     try {
-      await updateCommittee(id, form)
+      const payload = {
+        committee_name: form.committeeName,
+        description: form.description,
+        tagline: form.tagline,
+        start_year: form.startYear,
+        affiliated_faculty: {
+          name: form.affiliatedFaculty.name,
+        },
+        social_links: form.social_links,
+      }
+
+      await updateCommittee(id, payload)
       showToast('Committee updated successfully')
     } catch (error) {
       showToast(error?.response?.data?.message || 'Failed to update committee')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleAddMember = async () => {
+    if (!newMemberEmail.trim()) {
+      showToast('Email is required')
+      return
+    }
+
+    try {
+      await addMemberToCommittee({
+        committeeId: id,
+        student_email: newMemberEmail.trim(),
+      })
+
+      showToast('Member added successfully')
+
+      const updated = await getCommitteeMembers(id)
+      setMembers(normalizePeople(updated))
+
+      setNewMemberEmail('')
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to add member')
+    }
+  }
+
+  const handleAddHead = async () => {
+    if (!newHead.email.trim() || !newHead.role_title.trim() || !newHead.role_type.trim()) {
+      showToast('All head fields are required')
+      return
+    }
+
+    try {
+      await addHeadToCommittee({
+        committeeId: id,
+        head_email: newHead.email.trim(),
+        role_title: newHead.role_title.trim(),
+        role_type: newHead.role_type.trim(),
+      })
+
+      showToast('Head added successfully')
+
+      const updated = await getCommitteeHeads(id)
+      setHeads(normalizePeople(updated))
+
+      setNewHead({ email: '', role_title: '', role_type: 'CORE' })
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to add head')
     }
   }
 
@@ -308,17 +372,44 @@ export default function CommitteeProfileEdit() {
                 <div className="rounded-lg bg-surface-container-lowest p-8 shadow-[0_20px_40px_rgba(123,110,246,0.05)]">
                   <h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-primary">Members</h4>
                   <p className="mb-6 text-xs font-medium text-on-surface-variant">Students currently listed as committee members.</p>
+                  <div className="mb-4 flex gap-3">
+                    <input
+                      type="text"
+                      placeholder="Enter member email"
+                      value={newMemberEmail}
+                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                      className="w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddMember}
+                      className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95"
+                    >
+                      Add Member
+                    </button>
+                  </div>
                   <div className="space-y-3">
                     {members.map(member => (
-                      <div key={member.id || member._id || member.student_id || getPersonName(member)} className="rounded-xl bg-surface-container-low p-4">
-                        <p className="font-bold">{getPersonName(member)}</p>
-                        {getPersonEmail(member) ? (
-                          <p className="text-xs text-on-surface-variant">{getPersonEmail(member)}</p>
-                        ) : null}
+                      <div
+                        key={member.id || member.student_id}
+                        className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4"
+                      >
+                        <img
+                          src={getPersonImage(member)}
+                          alt={getPersonName(member)}
+                          className="h-12 w-12 rounded-full object-cover"
+                        />
+
+                        <div>
+                          <p className="font-bold">{getPersonName(member)}</p>
+                          <p className="text-xs text-on-surface-variant">
+                            {member.role_type || 'Member'}
+                          </p>
+                        </div>
                       </div>
                     ))}
                     {!loading && members.length === 0 ? (
-                      <p className="text-sm text-on-surface-variant">No members found.</p>
+                      <p className="text-sm text-on-surface-variant">No members yet</p>
                     ) : null}
                   </div>
                 </div>
@@ -326,17 +417,59 @@ export default function CommitteeProfileEdit() {
                 <div className="rounded-lg bg-surface-container-lowest p-8 shadow-[0_20px_40px_rgba(123,110,246,0.05)]">
                   <h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-primary">Heads</h4>
                   <p className="mb-6 text-xs font-medium text-on-surface-variant">Students currently listed as committee heads.</p>
+                  <div className="mb-4 flex gap-3">
+                    <input
+                      type="text"
+                      placeholder="Email"
+                      value={newHead.email}
+                      onChange={(e) => setNewHead(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Role Title"
+                      value={newHead.role_title}
+                      onChange={(e) => setNewHead(prev => ({ ...prev, role_title: e.target.value }))}
+                      className="w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary"
+                    />
+                    <select
+                      value={newHead.role_type}
+                      onChange={(e) => setNewHead(prev => ({ ...prev, role_type: e.target.value }))}
+                      className="rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="CORE">CORE</option>
+                      <option value="CO_COM">CO_COM</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddHead}
+                      className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95"
+                    >
+                      Add Head
+                    </button>
+                  </div>
                   <div className="space-y-3">
                     {heads.map(head => (
-                      <div key={head.id || head._id || head.student_id || getPersonName(head)} className="rounded-xl bg-surface-container-low p-4">
-                        <p className="font-bold">{getPersonName(head)}</p>
-                        {getPersonEmail(head) ? (
-                          <p className="text-xs text-on-surface-variant">{getPersonEmail(head)}</p>
-                        ) : null}
+                      <div
+                        key={head.id || head.student_id}
+                        className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4"
+                      >
+                        <img
+                          src={getPersonImage(head)}
+                          alt={getPersonName(head)}
+                          className="h-12 w-12 rounded-full object-cover"
+                        />
+
+                        <div>
+                          <p className="font-bold">{getPersonName(head)}</p>
+                          <p className="text-xs text-on-surface-variant">
+                            {head.role_title || 'Head'} • {head.role_type}
+                          </p>
+                        </div>
                       </div>
                     ))}
                     {!loading && heads.length === 0 ? (
-                      <p className="text-sm text-on-surface-variant">No heads found.</p>
+                      <p className="text-sm text-on-surface-variant">No heads yet</p>
                     ) : null}
                   </div>
                 </div>
