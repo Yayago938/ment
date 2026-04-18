@@ -208,14 +208,14 @@ export default function CommitteeProfileEdit() {
               <span className="material-symbols-outlined">settings</span>
             </button>
           </div>
-          <button
+          {/* <button
             className="rounded-full bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             type="button"
             onClick={handleSubmit}
             disabled={loading || saving || !id}
           >
             {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          </button> */}
         </div>
       </header>
 
