@@ -5,6 +5,8 @@ import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
 import GlassBlobCard from '../components/GlassBlobCard'
+import SaveItemButton from '../components/SaveItemButton'
+import useSavedEvents from '../hooks/useSavedEvents'
 
 const getRecordId = item =>
     item?.id || item?._id || item?.eventId || item?.event_id || item?.committeeId || item?.committee_id || item?.studentId || item?.student_id || item?.auth_id
@@ -29,6 +31,7 @@ const activateOnEnter = handler => event => {
 
 const Search = () => {
     const navigate = useNavigate()
+    const { pendingEventIds, isEventSaved, toggleSaveEvent } = useSavedEvents()
 
     const [query, setQuery] = useState("")
     const [debouncedQuery, setDebouncedQuery] = useState("")
@@ -195,10 +198,19 @@ const Search = () => {
                                         onKeyDown={eventId ? activateOnEnter(openEvent) : undefined}
                                         className="min-w-[280px] p-6 text-left flex flex-col gap-3"
                                     >
-                                        {/* Title */}
-                                        <h3 className="text-xl font-bold text-gray-900">
-                                            {eventName}
-                                        </h3>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <h3 className="text-xl font-bold text-gray-900">
+                                                {eventName}
+                                            </h3>
+                                            <SaveItemButton
+                                                eventId={eventId}
+                                                isSaved={isEventSaved(eventId)}
+                                                disabled={!eventId || pendingEventIds.has(String(eventId))}
+                                                onToggle={() => toggleSaveEvent(e)}
+                                                className="h-9 w-9 shrink-0 bg-surface-container-low shadow-none"
+                                                iconClassName="text-[18px]"
+                                            />
+                                        </div>
 
                                         {/* Venue */}
                                         <div className="flex items-center gap-2 text-gray-500">

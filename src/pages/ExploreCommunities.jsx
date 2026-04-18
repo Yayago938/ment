@@ -6,6 +6,7 @@ import SaveItemButton from '../components/SaveItemButton'
 import { getAllCommittees } from '../api/committeeApi'
 import { getAllEvents } from '../api/eventApi'
 import { filterCommitteesByTags, searchAll } from '../api/searchApi'
+import useSavedEvents from '../hooks/useSavedEvents'
 
 const defaultSpotlight = [
   { id: null, title: 'The Coding Collective', category: 'Tech', memberCount: '1.2k members', description: 'Deep dives into full-stack development and creative engineering practices.', icon: 'code', tone: 'text-primary bg-primary-fixed' },
@@ -173,6 +174,7 @@ export default function ExploreCommunities() {
   const [isLoadingCommunities, setIsLoadingCommunities] = useState(true)
   const [isLoadingEvents, setIsLoadingEvents] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
+  const { pendingEventIds, isEventSaved, toggleSaveEvent } = useSavedEvents()
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -338,9 +340,6 @@ export default function ExploreCommunities() {
               <div className="grid gap-6 md:grid-cols-3">
                 {spotlightCommunities.map((club) => (
                   <article key={club.id || club.title} className="group relative rounded-[24px] border border-black/5 bg-white p-8 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md">
-                    <div className="absolute right-6 top-6">
-                      <SaveItemButton itemKey={`committee:${club.id || club.title}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
-                    </div>
                     <Link to={club.id ? `/committee-detail/${club.id}` : '/committee-detail'} className="block">
                       <div className="mb-6 flex items-start justify-between">
                         <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ring-black/5 transition-transform duration-300 ease-out group-hover:scale-[1.03] ${club.tone}`}>
@@ -371,7 +370,14 @@ export default function ExploreCommunities() {
                 {upcomingEvents.map((event) => (
                   <article key={event.id || event.title} className="group relative overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md">
                     <div className="absolute right-4 top-4 z-10">
-                      <SaveItemButton itemKey={`event:${event.id || event.title}`} className="h-9 w-9 bg-white shadow-none" iconClassName="text-[18px]" />
+                      <SaveItemButton
+                        eventId={event.id}
+                        isSaved={isEventSaved(event.id)}
+                        disabled={!event.id || pendingEventIds.has(String(event.id))}
+                        onToggle={() => toggleSaveEvent(event)}
+                        className="h-9 w-9 bg-white shadow-none"
+                        iconClassName="text-[18px]"
+                      />
                     </div>
                     <div className="relative h-56 bg-surface-container-low">
                       <div className="absolute left-4 top-4 rounded-xl border border-black/5 bg-white/90 px-3 py-1.5 text-center shadow-lg">

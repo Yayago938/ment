@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import SaveItemButton from '../components/SaveItemButton'
 
 export default function OpportunityDetail() {
   return (
@@ -14,7 +13,6 @@ export default function OpportunityDetail() {
             <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">Hosted by Design Club</p>
           </div>
         </div>
-        <SaveItemButton itemKey="opportunity:product-design-internship" className="bg-white text-on-surface-variant" />
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-12 pb-32">

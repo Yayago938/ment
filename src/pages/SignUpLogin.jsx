@@ -62,21 +62,20 @@ export default function SignUpLogin() {
         }
 
         localStorage.removeItem('studentId')
+
+        const signupEmail = signupForm.email
         const res = await signupStudent({
           name: signupForm.fullName,
           sap_id: signupForm.sapId,
-          email: signupForm.email,
+          email: signupEmail,
           password: signupForm.password,
         })
-        const studentId =
-          res.data?.data?.id ||
-          res.data?.id
+
+        const studentId = res.data?.data?.id || res.data?.id
 
         localStorage.setItem('userName', signupForm.fullName)
-        localStorage.setItem('userEmail', signupForm.email)
-        localStorage.setItem('onboardingCompleted', 'false')
-        localStorage.setItem('profileCompleted', 'false')
-        localStorage.setItem('role', 'student')
+        localStorage.setItem('userEmail', signupEmail)
+        localStorage.setItem('needsPostSignupOnboarding', 'true')
 
         if (studentId) {
           localStorage.setItem('studentId', String(studentId))
@@ -90,7 +89,14 @@ export default function SignUpLogin() {
           confirmPassword: '',
         })
 
-        navigate('/edit-student-profile')
+        showToast('Account created successfully. Please log in to continue.')
+        setActiveTab('login')
+        setRole('student')
+        setLoginForm({
+          email: signupEmail,
+          password: '',
+        })
+
         return
       }
 
@@ -149,7 +155,10 @@ export default function SignUpLogin() {
             localStorage.setItem('studentId', String(studentId))
           }
 
-          navigate('/student-dashboard')
+          const needsPostSignupOnboarding =
+            localStorage.getItem('needsPostSignupOnboarding') === 'true'
+
+          navigate(needsPostSignupOnboarding ? '/interests-questionnaire' : '/student-dashboard')
           return
         }
 

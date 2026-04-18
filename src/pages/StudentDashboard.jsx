@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
@@ -10,6 +10,7 @@ import api from '../api/axios'
 import { getAllCommittees } from '../api/committeeApi'
 import { getAllEvents } from '../api/eventApi'
 import interviewApi from '../api/interviewApi'
+import useSavedEvents from '../hooks/useSavedEvents'
 
 const eventPlaceholderImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDQoHpehiKE_8jtjAeiCbS_7HhSNmL4R0ASx1jSsupX2yUaQyunhAc2lkwtIT1rPeSiITzX1ao1XaW_wVNwsJ6wL4NgxvcIiSeMhrGO5zTisomoTyFfVeuj6-Ed_mHX4CmXzVW3qx6I-kDVm4VerdWQuGodAHJEFmPuCfny4WTAlUrlzH6NsHPtMOpOmRFLcCkJIzEq68tiNI2JCoMjJ1EwFUCkSTB2tqIp96tBMnSzfTrq2CDWUt9FOJpAEMmeiVqSw35McDy7GDw'
 const clubPlaceholderImages = [
@@ -22,8 +23,6 @@ const clubPlaceholderImages = [
 const opportunityApplicationRoutes = studentId => ([
   studentId ? `/events/registration/student/${studentId}` : null,
   '/events/registration/my-applications',
-  '/events/my-applications',
-  '/events/my-registrations',
 ]).filter(Boolean)
 
 const activeStatuses = new Set([
@@ -100,6 +99,24 @@ const getSafeDateValue = (...values) => {
 
   return ''
 }
+
+const getEventId = event =>
+  event?.id || event?._id || event?.eventId || event?.event_id || null
+
+const normalizeEventSummary = event => ({
+  id: getEventId(event),
+  title: event?.event_name || event?.title || event?.name || 'Untitled Event',
+  description: event?.description || event?.summary || 'No description available',
+  venue: event?.venue || event?.location || event?.event_location || 'Venue to be announced',
+  eventDate: event?.event_date || event?.date || event?.startDate || event?.start_date || '',
+  eventTime: event?.event_time || event?.time || '',
+  registrationDeadline: event?.registration_deadline || '',
+  requiresRegistration:
+    typeof event?.requires_registration === 'boolean'
+      ? event.requires_registration
+      : Boolean(event?.requiresRegistration),
+  image: event?.image_url || event?.image || event?.event_image || null,
+})
 
 const getDefaultNextStep = status => {
   switch (String(status || '').toUpperCase()) {
@@ -303,8 +320,16 @@ export default function StudentDashboard() {
   const [interviewApplications, setInterviewApplications] = useState([])
   const [dashboardError, setDashboardError] = useState('')
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
+  const savedEventsSectionRef = useRef(null)
   const userName = localStorage.getItem('userName') || 'Student'
   const studentId = localStorage.getItem('studentId')
+  const {
+    savedEvents,
+    loading: loadingSavedEvents,
+    pendingEventIds,
+    isEventSaved,
+    toggleSaveEvent,
+  } = useSavedEvents()
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -395,28 +420,36 @@ export default function StudentDashboard() {
       'bg-primary-fixed text-on-primary-fixed',
       'bg-tertiary-fixed text-on-tertiary-fixed',
     ]
+    const normalizedEvent = normalizeEventSummary(event)
 
     return {
-      id: event.id || event._id || event.eventId || event.event_id,
-      title: event.event_name || 'Untitled Event',
-      detail: event.description || 'No description available',
+      id: normalizedEvent.id,
+      title: normalizedEvent.title,
+      detail: normalizedEvent.description,
+      event: event,
       month: formattedDate.month,
       day: formattedDate.day,
       dateLabel: formattedDate.dateLabel,
       bg: tones[index % tones.length],
-      to: event.id || event._id || event.eventId || event.event_id ? `/events/${event.id || event._id || event.eventId || event.event_id}` : '/events/portfolio-review',
+      venue: normalizedEvent.venue,
+      time: normalizedEvent.eventTime,
+      to: normalizedEvent.id ? `/events/${normalizedEvent.id}` : '/events/portfolio-review',
     }
   })
 
   const featuredEvent = events[0]
-    ? {
-        title: events[0].event_name || 'Untitled Event',
-        detail: events[0].description || 'No description available',
-        dateLabel: formatEventDate(events[0]).dateLabel,
-        image: events[0].image || events[0].event_image || eventPlaceholderImage,
-        venue: events[0].venue,
-        fid: events[0].id,
-      }
+    ? (() => {
+        const summary = normalizeEventSummary(events[0])
+
+        return {
+          ...summary,
+          detail: summary.description,
+          dateLabel: formatEventDate(events[0]).dateLabel,
+          image: summary.image || eventPlaceholderImage,
+          raw: events[0],
+          fid: summary.id,
+        }
+      })()
     : {
         title: 'Annual Tech Symposium 2024',
         detail: 'Join industry leaders from Silicon Valley and top researchers for a 2-day immersive experience on the future of AI and ethical engineering.',
@@ -436,12 +469,26 @@ export default function StudentDashboard() {
   const stats = [
     { icon: 'pending_actions', label: 'Active Applications', value: String(activeApplicationsCount).padStart(2, '0'), tone: 'text-primary bg-primary/10' },
     { icon: 'calendar_month', label: 'Upcoming Events', value: String(events.length).padStart(2, '0'), tone: 'text-secondary bg-secondary/10' },
-    { icon: 'bookmarks', label: 'Saved Opportunities', value: '28', tone: 'text-tertiary bg-tertiary-fixed/40' },
+    { icon: 'bookmarks', label: 'Saved Events', value: String(savedEvents.length).padStart(2, '0'), tone: 'text-tertiary bg-tertiary-fixed/40', action: 'saved-events' },
   ]
 
   const scheduleItems = useMemo(() => {
-    const upcomingEvents = events.flatMap(event => {
-      const eventId = event.id || event._id || event.eventId || event.event_id
+    const mergedEvents = [...events, ...savedEvents.map(savedEvent => ({
+      id: savedEvent.eventId,
+      event_name: savedEvent.event_name,
+      description: savedEvent.description,
+      venue: savedEvent.venue,
+      event_date: savedEvent.event_date,
+      event_time: savedEvent.event_time,
+      registration_deadline: savedEvent.registration_deadline,
+      requires_registration: savedEvent.requires_registration,
+    }))].filter((event, index, collection) => {
+      const eventId = getEventId(event)
+      return collection.findIndex(candidate => String(getEventId(candidate)) === String(eventId)) === index
+    })
+
+    const upcomingEvents = mergedEvents.flatMap(event => {
+      const eventId = getEventId(event)
       const title = event.event_name || event.title || event.name || 'Untitled Event'
       const venue = event.venue || event.location || event.event_location || 'Venue to be announced'
       const items = []
@@ -478,7 +525,14 @@ export default function StudentDashboard() {
     })).filter(item => item.type)
 
     return [...upcomingEvents, ...interviews]
-  }, [applicationRows, events])
+  }, [applicationRows, events, savedEvents])
+
+  const handleSavedEventsScroll = () => {
+    savedEventsSectionRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -515,7 +569,12 @@ export default function StudentDashboard() {
 
         <section className="mt-8 grid gap-6 md:grid-cols-3">
           {stats.map((stat) => (
-            <GlassBlobCard key={stat.label} className="editorial-shadow flex items-center gap-5 border-black/5 p-6">
+            <GlassBlobCard
+              key={stat.label}
+              className={`editorial-shadow flex items-center gap-5 border-black/5 p-6 ${stat.action ? 'cursor-pointer' : ''}`}
+              interactive={Boolean(stat.action)}
+              onClick={stat.action === 'saved-events' ? handleSavedEventsScroll : undefined}
+            >
               <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ring-black/5 ${stat.tone}`}>
                 <MaterialIcon className="text-3xl">{stat.icon}</MaterialIcon>
               </div>
@@ -542,7 +601,13 @@ export default function StudentDashboard() {
                 <img className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]" src={featuredEvent.image} alt={featuredEvent.title} />
                 <div className="absolute left-4 top-4 rounded-full border border-white/20 bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-sm">Featured Event</div>
                 <div className="absolute right-4 top-4">
-                  <SaveItemButton itemKey={`event:${events[0]?.id || events[0]?._id || events[0]?.eventId || events[0]?.event_id || featuredEvent.title}`} className="bg-white text-on-surface-variant" />
+                  <SaveItemButton
+                    eventId={featuredEvent.fid}
+                    isSaved={isEventSaved(featuredEvent.fid)}
+                    disabled={!featuredEvent.fid || pendingEventIds.has(String(featuredEvent.fid))}
+                    onToggle={() => toggleSaveEvent(featuredEvent.raw || events[0])}
+                    className="bg-white text-on-surface-variant"
+                  />
                 </div>
               </div>
               <div className="p-8 md:w-3/5">
@@ -570,9 +635,9 @@ export default function StudentDashboard() {
               <h2 className="font-headline text-2xl font-bold">Upcoming Events</h2>
             </div>
             <div className="space-y-4">
-              {loadingEvents && (
-                <p className="text-sm text-on-surface-variant">Loading events...</p>
-              )}
+                {loadingEvents && (
+                  <p className="text-sm text-on-surface-variant">Loading events...</p>
+                )}
 
               {!loadingEvents && mappedEvents.map((event) => (
                 <article
@@ -594,7 +659,14 @@ export default function StudentDashboard() {
                     </div>
                     <MaterialIcon className="text-outline transition-transform duration-300 ease-out group-hover:translate-x-0.5">chevron_right</MaterialIcon>
                   </Link>
-                  <SaveItemButton itemKey={`event:${event.id || event.title}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
+                  <SaveItemButton
+                    eventId={event.id}
+                    isSaved={isEventSaved(event.id)}
+                    disabled={!event.id || pendingEventIds.has(String(event.id))}
+                    onToggle={() => toggleSaveEvent(event.event)}
+                    className="h-9 w-9 bg-surface-container-low shadow-none"
+                    iconClassName="text-[18px]"
+                  />
                 </article>
               ))}
 
@@ -602,6 +674,106 @@ export default function StudentDashboard() {
                 <p className="text-sm text-on-surface-variant">No upcoming events available.</p>
               )}
             </div>
+          </div>
+        </section>
+
+        <section ref={savedEventsSectionRef} className="mt-12 scroll-mt-32">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-headline text-2xl font-bold">Saved Events</h2>
+              <p className="mt-2 text-sm text-on-surface-variant">
+                Revisit the events you bookmarked and jump back into details in one place.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSavedEventsScroll}
+              className="rounded-full border border-primary/15 bg-white px-4 py-2 text-sm font-bold text-primary transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/5"
+            >
+              Saved Events
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {loadingSavedEvents && (
+              <div className="premium-card rounded-[28px] border border-black/5 bg-white p-6 text-sm text-on-surface-variant shadow-sm">
+                Loading saved events...
+              </div>
+            )}
+
+            {!loadingSavedEvents && savedEvents.length === 0 && (
+              <div className="premium-card rounded-[28px] border border-dashed border-black/10 bg-white p-8 shadow-sm">
+                <p className="font-semibold text-on-surface">No saved events yet</p>
+                <p className="mt-2 text-sm text-on-surface-variant">
+                  Bookmark events to quickly access them here.
+                </p>
+              </div>
+            )}
+
+            {!loadingSavedEvents && savedEvents.map(savedEvent => {
+              const formattedDate = formatEventDate({ event_date: savedEvent.event_date })
+
+              return (
+                <article
+                  key={savedEvent.saveId || savedEvent.eventId}
+                  className="premium-card premium-glow editorial-shadow rounded-[28px] border border-black/5 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
+                    <Link
+                      to={`/events/${savedEvent.eventId}`}
+                      state={{ eventId: savedEvent.eventId, event: savedEvent.raw?.event || savedEvent }}
+                      className="flex min-w-0 flex-1 items-start gap-4"
+                    >
+                      <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-primary-fixed text-on-primary-fixed ring-1 ring-black/5">
+                        <span className="text-xs font-bold uppercase">{formattedDate.month}</span>
+                        <span className="font-headline text-xl font-extrabold">{formattedDate.day}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-headline text-xl font-bold">{savedEvent.event_name}</h3>
+                          {savedEvent.requires_registration && savedEvent.registration_deadline ? (
+                            <span className="rounded-full bg-secondary-fixed px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-on-secondary-fixed">
+                              Deadline {formatEventDate({ event_date: savedEvent.registration_deadline }).dateLabel}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-on-surface-variant">
+                          {savedEvent.description || 'No description available.'}
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-on-surface-variant">
+                          <span className="rounded-full bg-surface-container-low px-3 py-2">{formattedDate.dateLabel}</span>
+                          {savedEvent.venue ? (
+                            <span className="rounded-full bg-surface-container-low px-3 py-2">{savedEvent.venue}</span>
+                          ) : null}
+                          {savedEvent.event_time ? (
+                            <span className="rounded-full bg-surface-container-low px-3 py-2">{savedEvent.event_time}</span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </Link>
+
+                    <div className="flex items-center justify-between gap-4 lg:justify-end">
+                      <SaveItemButton
+                        eventId={savedEvent.eventId}
+                        isSaved
+                        disabled={pendingEventIds.has(String(savedEvent.eventId))}
+                        onToggle={() => toggleSaveEvent(savedEvent.eventId)}
+                        className="h-10 w-10 bg-surface-container-low shadow-none"
+                        iconClassName="text-[18px]"
+                      />
+                      <Link
+                        to={`/events/${savedEvent.eventId}`}
+                        state={{ eventId: savedEvent.eventId, event: savedEvent.raw?.event || savedEvent }}
+                        className="inline-flex items-center gap-2 rounded-full border border-primary/15 px-4 py-2 text-sm font-bold text-primary transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/5"
+                      >
+                        View Details
+                        <MaterialIcon className="text-base">arrow_forward</MaterialIcon>
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </section>
 
@@ -614,9 +786,6 @@ export default function StudentDashboard() {
 
             {!loadingCommittees && mappedCommittees.map((club) => (
               <article key={club.id || club.title} className="premium-card premium-glow group editorial-shadow relative rounded-[28px] border border-black/5 bg-white p-6 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md">
-                <div className="absolute right-5 top-5">
-                  <SaveItemButton itemKey={`committee:${club.id || club.title}`} className="h-9 w-9 bg-surface-container-low shadow-none" iconClassName="text-[18px]" />
-                </div>
                 <div className="mx-auto mb-4 h-20 w-20 overflow-hidden rounded-full ring-4 ring-white shadow-sm">
                   <img className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]" src={club.image} alt={club.title} />
                 </div>

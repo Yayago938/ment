@@ -5,6 +5,7 @@ import TopBar from '../components/TopBar'
 import FloatingBackButton from '../components/FloatingBackButton'
 import SaveItemButton from '../components/SaveItemButton'
 import { getEventById } from '../api/eventApi'
+import useSavedEvents from '../hooks/useSavedEvents'
 
 const fallbackPoster = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDclrmqU_6qblCD-kgD4Ty4AzznzU2hGGoWPp8mv4fU01ZCtpJndw2npWIGrIhKUxyexiFmDVy1Q0jZvj6SSiDCOF78AbpuDFmaWJJwYeJWjBZPvjpWuW8sIdMBz-VQTEWmvZtk0RiRLr2sCFywXsqvRdS5vBlIh2Xo1cMaTktBc46g3YNleHFLy0pQy0sclLwzNBzbMN3LzmuN1vzg0wndQFyI_PPCLT0BVFludc2xZ59e0hK-rxXMz_32vueQxS3JdrpKHZosEoI'
 
@@ -52,6 +53,7 @@ export default function EventDetails() {
   const navigate = useNavigate()
   const event = location.state?.event || {}
   const [eventDetails, setEventDetails] = useState(Object.keys(event).length > 0 ? event : null)
+  const { pendingEventIds, isEventSaved, toggleSaveEvent } = useSavedEvents()
 
   const selectedEventId =
     id ||
@@ -132,7 +134,12 @@ export default function EventDetails() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary-container opacity-70" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
             <div className="absolute right-6 top-6 z-20">
-              <SaveItemButton itemKey={`event:${eventMeta.id || eventMeta.title}`} />
+              <SaveItemButton
+                eventId={eventMeta.id}
+                isSaved={isEventSaved(eventMeta.id)}
+                disabled={!eventMeta.id || pendingEventIds.has(String(eventMeta.id))}
+                onToggle={() => toggleSaveEvent(eventDetails || event)}
+              />
             </div>
             <div className="absolute bottom-0 left-0 z-10 w-full p-12">
               <div className="flex flex-wrap gap-2">
