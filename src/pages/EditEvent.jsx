@@ -175,9 +175,9 @@ export default function EditEvent() {
 
   if (!formData) {
     return (
-      <div className="min-h-screen bg-surface text-on-surface">
+      <div className="flex min-h-screen bg-surface text-on-surface">
         <CommitteeSidebar />
-        <main className="px-4 pb-12 pt-24 lg:ml-64 lg:p-10 lg:pt-24">
+        <main className="ml-0 min-h-screen flex-1 px-4 pb-20 pt-24 sm:px-6 md:px-8 lg:ml-64 lg:pb-0 lg:p-10 lg:pt-24">
           <section className="rounded-[28px] bg-white p-8 shadow-sm">
             <h1 className="text-2xl font-bold">Event data unavailable</h1>
             <p className="mt-2 text-sm text-on-surface-variant">
@@ -197,8 +197,8 @@ export default function EditEvent() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
-      <nav className="fixed left-0 top-0 z-50 flex h-20 w-full items-center justify-between bg-white/80 px-8 shadow-[0_20px_40px_rgba(123,110,246,0.08)] backdrop-blur-xl">
+    <div className="flex min-h-screen bg-surface text-on-surface">
+      <nav className="fixed left-0 top-0 z-50 flex h-20 w-full items-center justify-between bg-white/80 px-4 shadow-[0_20px_40px_rgba(123,110,246,0.08)] backdrop-blur-xl sm:px-6 md:px-8">
         <div className="flex items-center gap-4">
           <span className="bg-gradient-to-r from-[#7B6EF6] to-[#F6A6C1] bg-clip-text font-headline text-2xl font-bold tracking-tight text-transparent">
             Aura Committee
@@ -224,23 +224,23 @@ export default function EditEvent() {
 
       <CommitteeSidebar />
 
-      <main className="px-8 pb-20 pt-28 lg:ml-64">
+      <main className="ml-0 min-h-screen flex-1 px-4 pb-20 pt-28 sm:px-6 md:px-8 lg:ml-64 lg:pb-0 lg:px-12">
         <div className="mx-auto max-w-5xl">
-          <header className="mb-12 flex flex-wrap items-end justify-between gap-6">
+          <header className="mb-12 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">Edit Event</h1>
+              <h1 className="text-2xl font-extrabold tracking-tight text-on-surface sm:text-3xl md:text-4xl">Edit Event</h1>
               <p className="mt-2 text-lg text-on-surface-variant">Update details, registration settings, and attendee questions in one place.</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
-                className="rounded-full border border-outline-variant/20 px-8 py-3 font-semibold text-primary transition-all hover:bg-primary/5"
+                className="w-full rounded-full border border-outline-variant/20 px-8 py-3 font-semibold text-primary transition-all hover:bg-primary/5 sm:w-auto"
                 type="button"
                 onClick={() => navigate(`/committee/${formData.committeeId}/events`)}
               >
                 Cancel
               </button>
               <button
-                className="rounded-full bg-primary px-8 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02]"
+                className="w-full rounded-full bg-primary px-8 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02] sm:w-auto"
                 type="submit"
                 form="edit-event-form"
                 disabled={isSubmitting}
@@ -325,12 +325,12 @@ export default function EditEvent() {
 
             <section className="rounded-xl bg-surface-container-low p-1">
               <div className="rounded-lg bg-surface-container-lowest p-8 shadow-sm">
-                <div className="mb-8 flex items-center justify-between">
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <span className="material-symbols-outlined rounded-lg bg-primary/10 p-2 text-primary">quiz</span>
                     <h2 className="text-xl font-bold tracking-tight">Registration Questions</h2>
                   </div>
-                  <button className="flex items-center gap-1 text-sm font-bold text-primary hover:underline" type="button" onClick={addQuestion}>
+                  <button className="flex w-full items-center gap-1 text-sm font-bold text-primary hover:underline sm:w-auto" type="button" onClick={addQuestion}>
                     <span className="material-symbols-outlined text-sm">add_circle</span>
                     Add Question
                   </button>

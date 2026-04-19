@@ -3,16 +3,20 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AdminDashboard from './pages/AdminDashboard'
 import CommitteeDashboard from './pages/CommitteeDashboard'
 import CommitteeDetail from './pages/CommitteeDetail'
+import CommitteeApplications from './pages/CommitteeApplications'
 import CommitteeProfile from './pages/CommitteeProfile'
 import CommitteeProfileEdit from './pages/CommitteeProfileEdit'
+import CreateInterview from './pages/CreateInterview'
 import CreateEvent from './pages/CreateEvent'
 import CommitteeEvents from './pages/CommitteeEvents'
 import ApplicationTracker from './pages/ApplicationTracker'
 import EditEvent from './pages/EditEvent'
+import EditInterview from './pages/EditInterview'
 import EditStudentProfile from './pages/EditStudentProfile'
 import EventDetails from './pages/EventDetails'
 import EventRegistration from './pages/EventRegistration'
 import EventRegistrations from './pages/EventRegistrations'
+import InterviewApplications from './pages/InterviewApplications'
 import ExploreCommunities from './pages/ExploreCommunities'
 import FindingMatches from './pages/FindingMatches'
 import InterestsQuestionnaire from './pages/InterestsQuestionnaire'
@@ -78,6 +82,14 @@ export default function App() {
       />
       <Route path="/notifications" element={<Notifications />} />
       <Route
+        path="/committee/interview/:id/applications"
+        element={
+          <ProtectedRoute role="committee">
+            <InterviewApplications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/committee/notifications"
         element={
           <ProtectedRoute role="committee">
@@ -121,7 +133,7 @@ export default function App() {
         path="/committee/:id/applications"
         element={
           <ProtectedRoute role="committee">
-            <MyApplications />
+            <CommitteeApplications />
           </ProtectedRoute>
         }
       />
@@ -134,10 +146,26 @@ export default function App() {
         }
       />
       <Route
+        path="/committee/:id/create-interview"
+        element={
+          <ProtectedRoute role="committee">
+            <CreateInterview />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/committee/:id/events/new"
         element={
           <ProtectedRoute role="committee">
             <CreateEvent />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/committee/interview/edit/:interviewId"
+        element={
+          <ProtectedRoute role="committee">
+            <EditInterview />
           </ProtectedRoute>
         }
       />

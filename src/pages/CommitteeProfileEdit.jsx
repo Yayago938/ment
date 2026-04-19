@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
 import { useToast } from '../components/ToastProvider'
 import {
@@ -128,16 +128,22 @@ export default function CommitteeProfileEdit() {
         committee_name: form.committeeName,
         description: form.description,
         tagline: form.tagline,
-        start_year: form.startYear,
+        start_year: Number(form.startYear),
+        tags: [],
         affiliated_faculty: {
           name: form.affiliatedFaculty.name,
         },
-        social_links: form.social_links,
+        social_links: {
+          email: form.social_links.website || '',
+        },
       }
+
+      console.log('UPDATE PAYLOAD:', payload)
 
       await updateCommittee(id, payload)
       showToast('Committee updated successfully')
     } catch (error) {
+      console.log('UPDATE ERROR:', error.response?.data)
       showToast(error?.response?.data?.message || 'Failed to update committee')
     } finally {
       setSaving(false)
@@ -193,22 +199,22 @@ export default function CommitteeProfileEdit() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="flex min-h-screen bg-surface text-on-surface">
       <CommitteeSidebar />
 
-      <header className="fixed top-0 left-64 right-0 z-40 flex h-16 items-center justify-between bg-surface/80 px-12 backdrop-blur-xl">
+      <header className="fixed left-0 right-0 top-0 z-40 flex min-h-16 flex-col gap-4 bg-surface/80 px-4 py-3 backdrop-blur-xl sm:px-6 md:px-8 lg:left-64 lg:flex-row lg:items-center lg:justify-between lg:px-12">
         <h2 className="text-xl font-black tracking-tight text-primary">Committee Profile Management</h2>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 text-on-surface-variant">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:gap-6">
+          {/* <div className="flex items-center gap-4 text-on-surface-variant">
             <Link to="/committee/notifications" className="transition-colors hover:text-primary">
               <span className="material-symbols-outlined">notifications</span>
             </Link>
             <button className="transition-colors hover:text-primary" type="button">
               <span className="material-symbols-outlined">settings</span>
             </button>
-          </div>
-          {/* <button
-            className="rounded-full bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          </div> */}
+          <button
+            className="w-full rounded-full bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             type="button"
             onClick={handleSubmit}
             disabled={loading || saving || !id}
@@ -218,19 +224,19 @@ export default function CommitteeProfileEdit() {
         </div>
       </header>
 
-      <main className="ml-64 min-h-screen px-12 pb-20 pt-24">
+      <main className="ml-0 min-h-screen flex-1 px-4 pb-20 pt-28 sm:px-6 md:px-8 lg:ml-64 lg:pb-0 lg:px-12">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-12">
             <section className="col-span-12">
-              <div className="group relative h-[320px] overflow-hidden rounded-xl shadow-sm">
+              <div className="group relative h-[220px] overflow-hidden rounded-xl shadow-sm sm:h-[280px] lg:h-[320px]">
                 <img
                   className="h-full w-full object-cover"
                   alt="Abstract flowing gradients in soft lavender and deep indigo"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuATPp4ISaliRTNuQxKdD4ZnYusE9QueNwthmHZKFmCU_-PDSjM1OCxey53Un8IXC4Hu3t3YH6UH1xnox0LGKCR5ubSPjCgFDHcE_iUScR2IcluHB-SHwjQyWWCUNmmfa4OLtKtFjKAoSpsLcanrYPQzmgmEWMF991hLnPQQEBTS7vBsrP2fBTYa0cM-YV6hPNcoJbTnXrOoSzJl6nLP2HmSxrX70rI4y2VBGMtfIvtj-HaAbtC6KD2GyD0buMUqZ1kXfNAEftm69ic"
                 />
               </div>
-              <div className="relative -mt-16 ml-12 flex items-end gap-6">
-                <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl">
+              <div className="relative -mt-12 ml-4 flex flex-col items-start gap-4 sm:-mt-16 sm:ml-12 sm:flex-row sm:items-end sm:gap-6">
+                <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl sm:h-32 sm:w-32">
                   <img
                     className="h-full w-full object-cover"
                     alt="Committee logo"
@@ -238,13 +244,13 @@ export default function CommitteeProfileEdit() {
                   />
                 </div>
                 <div className="pb-2">
-                  <h3 className="text-3xl font-extrabold tracking-tight">{form.committeeName || 'Committee Profile'}</h3>
-                  <p className="font-medium text-on-surface-variant">{form.tagline}</p>
+                  <h3 className="break-words text-2xl font-extrabold tracking-tight sm:text-3xl">{form.committeeName || 'Committee Profile'}</h3>
+                  <p className="break-words font-medium text-on-surface-variant">{form.tagline}</p>
                 </div>
               </div>
             </section>
 
-            <section className="col-span-12 space-y-6 md:col-span-5">
+            <section className="col-span-12 space-y-6 md:col-span-1 lg:col-span-5">
               <div className="rounded-lg bg-surface-container-lowest p-8 shadow-[0_20px_40px_rgba(123,110,246,0.05)]">
                 <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-primary">Committee Info</h4>
                 <div className="space-y-5">
@@ -353,7 +359,7 @@ export default function CommitteeProfileEdit() {
               </div>
             </section>
 
-            <section className="col-span-12 md:col-span-7">
+            <section className="col-span-12 md:col-span-1 lg:col-span-7">
               <div className="h-full rounded-lg bg-surface-container-lowest p-8 shadow-[0_20px_40px_rgba(123,110,246,0.05)]">
                 <h4 className="mb-6 text-sm font-bold uppercase tracking-widest text-primary">Description</h4>
                 <label className="mb-1 block pl-1 text-xs font-semibold text-on-surface-variant">Committee Description</label>
@@ -371,7 +377,7 @@ export default function CommitteeProfileEdit() {
                 <div className="rounded-lg bg-surface-container-lowest p-8 shadow-[0_20px_40px_rgba(123,110,246,0.05)]">
                   <h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-primary">Members</h4>
                   <p className="mb-6 text-xs font-medium text-on-surface-variant">Students currently listed as committee members.</p>
-                  <div className="mb-4 flex gap-3">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                     <input
                       type="text"
                       placeholder="Enter member email"
@@ -382,7 +388,7 @@ export default function CommitteeProfileEdit() {
                     <button
                       type="button"
                       onClick={handleAddMember}
-                      className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95"
+                      className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 sm:w-auto"
                     >
                       Add Member
                     </button>
@@ -391,16 +397,16 @@ export default function CommitteeProfileEdit() {
                     {members.map(member => (
                       <div
                         key={member.id || member.student_id}
-                        className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4"
+                        className="flex items-center gap-4 overflow-hidden rounded-xl bg-surface-container-low p-4"
                       >
                         <img
                           src={getPersonImage(member)}
                           alt={getPersonName(member)}
-                          className="h-12 w-12 rounded-full object-cover"
+                          className="h-10 w-10 rounded-full object-cover sm:h-12 sm:w-12"
                         />
 
-                        <div>
-                          <p className="font-bold">{getPersonName(member)}</p>
+                        <div className="min-w-0">
+                          <p className="break-words font-bold">{getPersonName(member)}</p>
                           <p className="text-xs text-on-surface-variant">
                             {member.role_type || 'Member'}
                           </p>
@@ -416,7 +422,7 @@ export default function CommitteeProfileEdit() {
                 <div className="rounded-lg bg-surface-container-lowest p-8 shadow-[0_20px_40px_rgba(123,110,246,0.05)]">
                   <h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-primary">Heads</h4>
                   <p className="mb-6 text-xs font-medium text-on-surface-variant">Students currently listed as committee heads.</p>
-                  <div className="mb-4 flex gap-3">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                     <input
                       type="text"
                       placeholder="Email"
@@ -434,7 +440,7 @@ export default function CommitteeProfileEdit() {
                     <select
                       value={newHead.role_type}
                       onChange={(e) => setNewHead(prev => ({ ...prev, role_type: e.target.value }))}
-                      className="rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary"
+                      className="w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-primary sm:w-auto"
                     >
                       <option value="CORE">CORE</option>
                       <option value="CO_COM">CO_COM</option>
@@ -442,7 +448,7 @@ export default function CommitteeProfileEdit() {
                     <button
                       type="button"
                       onClick={handleAddHead}
-                      className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95"
+                      className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 sm:w-auto"
                     >
                       Add Head
                     </button>
@@ -450,17 +456,17 @@ export default function CommitteeProfileEdit() {
                   <div className="space-y-3">
                     {heads.map(head => (
                       <div
-                        key={head.name ||head.id || head.student_id}
-                        className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4"
+                        key={head.id || head.student_id}
+                        className="flex items-center gap-4 overflow-hidden rounded-xl bg-surface-container-low p-4"
                       >
                         <img
                           src={getPersonImage(head)}
                           alt={getPersonName(head)}
-                          className="h-12 w-12 rounded-full object-cover"
+                          className="h-10 w-10 rounded-full object-cover sm:h-12 sm:w-12"
                         />
 
-                        <div>
-                          <p className="font-bold">{getPersonName(head)}</p>
+                        <div className="min-w-0">
+                          <p className="break-words font-bold">{getPersonName(head)}</p>
                           <p className="text-xs text-on-surface-variant">
                             {head.role_title || 'Head'} • {head.role_type}
                           </p>
@@ -480,7 +486,7 @@ export default function CommitteeProfileEdit() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading || saving || !id}
-                className="rounded-full bg-primary px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full bg-primary px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
