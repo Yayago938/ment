@@ -425,7 +425,7 @@ export default function EditStudentProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-surface">
     <StudentSidebar />
 
     <TopBar
