@@ -10,6 +10,11 @@ const asArray = value => {
   return []
 }
 
+const getEventId = event =>
+  typeof event === 'string'
+    ? event
+    : event?.id || event?._id || event?.eventId || event?.event_id || null
+
 const getResponseCollection = payload => {
   const candidates = [
     payload,
@@ -17,6 +22,7 @@ const getResponseCollection = payload => {
     payload?.data?.data,
     payload?.data?.savedEvents,
     payload?.data?.saved_events,
+    payload?.data?.events,
     payload?.savedEvents,
     payload?.saved_events,
     payload?.events,
@@ -34,56 +40,114 @@ const toDateValue = value => {
   return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime()
 }
 
-export const normalizeSavedEvent = savedItem => {
-  if (!savedItem) {
+const sortSavedEvents = events =>
+  [...events].sort((left, right) => toDateValue(left.event_date) - toDateValue(right.event_date))
+
+const getEventSource = savedItem => {
+  if (!savedItem || typeof savedItem !== 'object') {
     return null
   }
 
-  const nestedEvent = savedItem.event || savedItem.savedEvent || savedItem
+  return (
+    savedItem.event ||
+    savedItem.savedEvent ||
+    savedItem.event_details ||
+    savedItem.eventData ||
+    savedItem.data ||
+    savedItem
+  )
+}
+
+const getSavedRecordId = (savedItem, eventId) =>
+  savedItem?.saveId || savedItem?.save_id || savedItem?._id || savedItem?.id || `${eventId}-saved`
+
+export const normalizeSavedEvent = savedItem => {
+  const nestedEvent = getEventSource(savedItem)
+
+  if (!nestedEvent) {
+    return null
+  }
+
   const eventId =
-    nestedEvent?.id ||
-    nestedEvent?._id ||
     nestedEvent?.eventId ||
     nestedEvent?.event_id ||
+    nestedEvent?.event?.id ||
+    nestedEvent?.event?._id ||
+    nestedEvent?.event?.eventId ||
+    getEventId(nestedEvent) ||
     savedItem?.eventId ||
-    savedItem?.event_id
+    savedItem?.event_id ||
+    savedItem?.event?.id ||
+    savedItem?.event?._id ||
+    savedItem?.event?.eventId ||
+    null
 
   if (!eventId) {
     return null
   }
 
   return {
-    saveId: savedItem?.id || savedItem?._id || savedItem?.saveId || `${eventId}-saved`,
+    saveId: getSavedRecordId(savedItem, eventId),
     eventId,
-    event_name: nestedEvent?.event_name || nestedEvent?.title || nestedEvent?.name || 'Untitled Event',
-    description: nestedEvent?.description || nestedEvent?.summary || '',
-    venue: nestedEvent?.venue || nestedEvent?.location || nestedEvent?.event_location || '',
-    event_date: nestedEvent?.event_date || nestedEvent?.date || nestedEvent?.startDate || nestedEvent?.start_date || '',
-    event_time: nestedEvent?.event_time || nestedEvent?.time || '',
-    registration_deadline: nestedEvent?.registration_deadline || nestedEvent?.deadline || '',
-    tags: asArray(nestedEvent?.tags),
+    event_name: nestedEvent?.event_name || nestedEvent?.title || nestedEvent?.name || nestedEvent?.event?.event_name || nestedEvent?.event?.title || nestedEvent?.event?.name || 'Untitled Event',
+    description: nestedEvent?.description || nestedEvent?.summary || nestedEvent?.event?.description || nestedEvent?.event?.summary || '',
+    venue: nestedEvent?.venue || nestedEvent?.location || nestedEvent?.event_location || nestedEvent?.event?.venue || nestedEvent?.event?.location || nestedEvent?.event?.event_location || '',
+    event_date: nestedEvent?.event_date || nestedEvent?.date || nestedEvent?.startDate || nestedEvent?.start_date || nestedEvent?.event?.event_date || nestedEvent?.event?.date || nestedEvent?.event?.startDate || nestedEvent?.event?.start_date || '',
+    event_time: nestedEvent?.event_time || nestedEvent?.time || nestedEvent?.event?.event_time || nestedEvent?.event?.time || '',
+    registration_deadline: nestedEvent?.registration_deadline || nestedEvent?.deadline || nestedEvent?.event?.registration_deadline || nestedEvent?.event?.deadline || '',
+    tags: asArray(nestedEvent?.tags || nestedEvent?.event?.tags),
     requires_registration:
       typeof nestedEvent?.requires_registration === 'boolean'
         ? nestedEvent.requires_registration
-        : Boolean(nestedEvent?.requiresRegistration),
-    committeeId:
-      nestedEvent?.committeeId ||
-      nestedEvent?.committee_id ||
-      nestedEvent?.committee?.id ||
-      nestedEvent?.committee?._id ||
-      null,
-    image_url: nestedEvent?.image_url || nestedEvent?.image || nestedEvent?.event_image || nestedEvent?.poster_url || null,
+        : typeof nestedEvent?.event?.requires_registration === 'boolean'
+          ? nestedEvent.event.requires_registration
+          : Boolean(nestedEvent?.requiresRegistration || nestedEvent?.event?.requiresRegistration),
     raw: savedItem,
   }
 }
 
-const normalizeSaveCandidate = event => {
-  if (!event) {
+const normalizeSaveCandidate = input => {
+  if (!input || typeof input !== 'object') {
     return null
   }
 
-  return normalizeSavedEvent({ event, id: `optimistic-${Date.now()}` })
+  const eventId = getEventId(input)
+
+  if (!eventId) {
+    return null
+  }
+
+  return normalizeSavedEvent({
+    id: `optimistic-${eventId}`,
+    event: input,
+    eventId,
+  })
 }
+
+const isDuplicateSaveError = error => {
+  const combinedMessage = [
+    error?.response?.data?.message,
+    error?.response?.data?.error,
+    error?.response?.data?.details,
+    error?.message,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return [
+    'already saved',
+    'already exists',
+    'duplicate',
+    'unique constraint',
+    'already present',
+    'exists',
+    'saved event exists',
+    'record already',
+  ].some(fragment => combinedMessage.includes(fragment))
+}
+
+const isServerError = error => (error?.response?.status || 0) >= 500
 
 export default function useSavedEvents({ autoLoad = true } = {}) {
   const { showToast } = useToast()
@@ -98,15 +162,20 @@ export default function useSavedEvents({ autoLoad = true } = {}) {
 
     try {
       const response = await getSavedEvents()
-      const normalized = getResponseCollection(response)
-        .map(normalizeSavedEvent)
-        .filter(Boolean)
-        .sort((left, right) => toDateValue(left.event_date) - toDateValue(right.event_date))
+      const normalized = sortSavedEvents(
+        getResponseCollection(response)
+          .map(normalizeSavedEvent)
+          .filter(Boolean),
+      )
 
       setSavedEvents(normalized)
       return normalized
     } catch (error) {
-      console.error('Failed to load saved events:', error)
+      console.error('[refreshSavedEvents] failed', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+      })
 
       if (!silent) {
         showToast(error?.response?.data?.message || 'Failed to load saved events')
@@ -135,56 +204,104 @@ export default function useSavedEvents({ autoLoad = true } = {}) {
   )
 
   const isEventSaved = useCallback(
-    eventId => savedEventIds.has(String(eventId)),
+    input => {
+      const eventId = getEventId(input)
+      return Boolean(eventId) && savedEventIds.has(String(eventId))
+    },
     [savedEventIds],
   )
 
-  const toggleSaveEvent = useCallback(async eventOrId => {
-    const eventId =
-      typeof eventOrId === 'object'
-        ? eventOrId?.id || eventOrId?._id || eventOrId?.eventId || eventOrId?.event_id
-        : eventOrId
+  const toggleSaveEvent = useCallback(async input => {
+    console.log('[toggleSaveEvent] input', input)
+
+    const eventId = getEventId(input)
+
+    console.log('[toggleSaveEvent] resolved eventId', eventId)
 
     if (!eventId) {
+      console.error('[toggleSaveEvent] invalid event id', input)
+      showToast('Unable to save this event right now')
       return false
     }
 
     const normalizedId = String(eventId)
+    const currentSavedIds = Array.from(savedEventIds)
+    const wasSaved = currentSavedIds.includes(normalizedId)
+
+    console.log('[toggleSaveEvent] state before action', {
+      eventId: normalizedId,
+      wasSaved,
+      savedIds: currentSavedIds,
+    })
 
     if (pendingEventIds.has(normalizedId)) {
-      return isEventSaved(eventId)
+      return isEventSaved(normalizedId)
     }
 
-    const wasSaved = isEventSaved(eventId)
+    const optimisticEvent = normalizeSaveCandidate(input)
     const previousSavedEvents = savedEvents
-    const optimisticEvent = typeof eventOrId === 'object' ? normalizeSaveCandidate(eventOrId) : null
 
-    setPendingEventIds(current => new Set([...current, normalizedId]))
+    setPendingEventIds(current => {
+      const next = new Set(current)
+      next.add(normalizedId)
+      return next
+    })
 
     if (wasSaved) {
       setSavedEvents(current => current.filter(item => String(item.eventId) !== normalizedId))
     } else if (optimisticEvent) {
-      setSavedEvents(current => {
-        const withoutCurrent = current.filter(item => String(item.eventId) !== normalizedId)
-        return [...withoutCurrent, optimisticEvent].sort((left, right) => toDateValue(left.event_date) - toDateValue(right.event_date))
-      })
+      setSavedEvents(current => sortSavedEvents([
+        ...current.filter(item => String(item.eventId) !== normalizedId),
+        optimisticEvent,
+      ]))
     }
 
     try {
       if (wasSaved) {
-        await deleteSavedEvent(eventId)
+        await deleteSavedEvent(normalizedId)
+        await refreshSavedEvents({ silent: true })
         showToast('Removed from saved events')
         return false
       }
 
-      await saveEvent(eventId)
-      showToast('Saved event')
+      await saveEvent(normalizedId)
       await refreshSavedEvents({ silent: true })
+      showToast('Saved event')
       return true
     } catch (error) {
-      console.error('Failed to toggle saved event:', error)
+      console.error('[toggleSaveEvent] failed', {
+        eventId: normalizedId,
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+        input,
+      })
+
+      if (!wasSaved) {
+        const refreshedEvents = await refreshSavedEvents({ silent: true })
+        const isPresentAfterRefresh = refreshedEvents.some(item => String(item.eventId) === normalizedId)
+
+        console.log('[toggleSaveEvent] result after refresh on failure', {
+          eventId: normalizedId,
+          isDuplicateSaveError: isDuplicateSaveError(error),
+          isServerError: isServerError(error),
+          isPresentAfterRefresh,
+          refreshedSavedIds: refreshedEvents.map(item => String(item.eventId)),
+        })
+
+        if (isDuplicateSaveError(error) && isPresentAfterRefresh) {
+          showToast('Saved event')
+          return true
+        }
+
+        if (isServerError(error) && isPresentAfterRefresh) {
+          showToast('Saved event')
+          return true
+        }
+      }
+
       setSavedEvents(previousSavedEvents)
-      showToast(error?.response?.data?.message || 'Unable to update saved events right now')
+      showToast('Unable to update saved events right now')
       return wasSaved
     } finally {
       setPendingEventIds(current => {
@@ -193,15 +310,13 @@ export default function useSavedEvents({ autoLoad = true } = {}) {
         return next
       })
     }
-  }, [isEventSaved, pendingEventIds, refreshSavedEvents, savedEvents, showToast])
+  }, [isEventSaved, pendingEventIds, refreshSavedEvents, savedEventIds, savedEvents, showToast])
 
   return {
     savedEvents,
-    savedEventIds,
     loading,
     pendingEventIds,
     isEventSaved,
-    refreshSavedEvents,
     toggleSaveEvent,
   }
 }
