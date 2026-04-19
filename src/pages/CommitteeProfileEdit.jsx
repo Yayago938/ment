@@ -47,10 +47,9 @@ const normalizePeople = data => {
 }
 
 const getPersonName = person =>
-  person?.student_name ||
   person?.students?.name ||
+  person?.student_name ||
   person?.name ||
-  person?.student_id ||
   'Unnamed'
 
 const getPersonImage = person =>
@@ -451,7 +450,7 @@ export default function CommitteeProfileEdit() {
                   <div className="space-y-3">
                     {heads.map(head => (
                       <div
-                        key={head.id || head.student_id}
+                        key={head.name ||head.id || head.student_id}
                         className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4"
                       >
                         <img

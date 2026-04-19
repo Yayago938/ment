@@ -620,7 +620,7 @@ export default function StudentDashboard() {
                   <span className="rounded-full bg-surface-container-low px-4 py-2 text-xs font-semibold">{featuredEvent.venue}</span>
                 </div>
                 <Link
-                  to={`/events/${featuredEvent.fid}/register`}
+                  to={`/events/${featuredEvent.fid}`}
                   state={{ event: featuredEvent }}
                   className="premium-button premium-glow mt-8 block w-full rounded-full bg-primary py-3 text-center text-sm font-bold text-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-md active:scale-[0.99]"
                 >
@@ -646,7 +646,7 @@ export default function StudentDashboard() {
                 >
                   <Link
                     to={event.to}
-                    state={event.id ? { eventId: event.id } : undefined}
+                    state={event.id ? { eventId: event.id, event: event.event } : undefined}
                     className="flex flex-1 items-center gap-4"
                   >
                     <div className={`flex h-16 w-16 flex-col items-center justify-center rounded-2xl ring-1 ring-black/5 ${event.bg}`}>
