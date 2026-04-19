@@ -33,16 +33,52 @@ export const getEventById = async (eventId) => {
 };
 
 export const getSavedEvents = async () => {
-  const res = await api.get("/events/getSavedEvents");
-  return res.data;
+  try {
+    const res = await api.get("/events/getSavedEvents");
+    return res.data;
+  } catch (error) {
+    console.error('[getSavedEvents] failed', {
+      status: error?.response?.status,
+      data: error?.response?.data,
+      message: error?.message,
+    });
+
+    throw error;
+  }
 };
 
 export const saveEvent = async (eventId) => {
-  const res = await api.post("/events/saveEvent", { eventId });
-  return res.data;
+  const payload = { eventId };
+
+  console.log('[saveEvent] sending', { eventId, payload });
+
+  try {
+    const res = await api.post("/events/saveEvent", payload);
+    return res.data;
+  } catch (error) {
+    console.error('[saveEvent] failed', {
+      eventId,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      message: error?.message,
+    });
+
+    throw error;
+  }
 };
 
 export const deleteSavedEvent = async (eventId) => {
-  const res = await api.delete(`/events/deleteSavedEvent/${eventId}`);
-  return res.data;
+  try {
+    const res = await api.delete(`/events/deleteSavedEvent/${eventId}`);
+    return res.data;
+  } catch (error) {
+    console.error('[deleteSavedEvent] failed', {
+      eventId,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      message: error?.message,
+    });
+
+    throw error;
+  }
 };

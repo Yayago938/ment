@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
@@ -167,7 +168,7 @@ const normalizeOpportunityApplications = payload => {
 }
 
 const normalizeInterviewApplications = payload => {
-  const applications = getApplicationsFromPayload(payload)
+  const applications = payload?.data?.data || getApplicationsFromPayload(payload)
 
   return applications.map(application => ({
     id: application?.id || application?._id || application?.application_id || `interview-${application?.interview_id}`,
@@ -287,6 +288,7 @@ const matchesFilter = (application, filter) => {
 }
 
 export default function MyApplications() {
+  const navigate = useNavigate()
   const [opportunityApplications, setOpportunityApplications] = useState([])
   const [interviewApplications, setInterviewApplications] = useState([])
   const [loading, setLoading] = useState(true)
@@ -344,7 +346,10 @@ export default function MyApplications() {
   )
 
   const tableRows = useMemo(
-    () => filtered.map(normalizeTableRow),
+    () => filtered.map(application => ({
+      application,
+      row: normalizeTableRow(application),
+    })),
     [filtered],
   )
 
@@ -424,8 +429,19 @@ export default function MyApplications() {
                         </tr>
                       </thead>
                       <tbody>
-                        {tableRows.length > 0 ? tableRows.map(([title, type, date, status, nextStep, icon, iconTone, statusTone]) => (
-                          <tr key={`${title}-${type}-${date}`} className="border-t border-black/5 transition-colors duration-200 ease-out hover:bg-primary/5">
+                        {tableRows.length > 0 ? tableRows.map(({ application, row }) => {
+                          const [title, type, date, status, nextStep, icon, iconTone, statusTone] = row
+
+                          return (
+                          <tr
+                            key={application?.id || `${title}-${type}-${date}`}
+                            onClick={() => {
+                              if (application?.source === 'interview') {
+                                navigate(`/applications/${application.id}`)
+                              }
+                            }}
+                            className="border-t border-black/5 transition-colors duration-200 ease-out hover:bg-primary/5"
+                          >
                             <td className="px-8 py-5">
                               <div className="flex items-center gap-3">
                                 <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconTone}`}>
@@ -441,7 +457,7 @@ export default function MyApplications() {
                             </td>
                             <td className="px-8 py-5 text-sm font-medium text-primary">{nextStep}</td>
                           </tr>
-                        )) : (
+                        )}) : (
                           <tr className="border-t border-surface-container-low">
                             <td colSpan="5" className="px-8 py-8">
                               <div className="mx-auto flex max-w-md items-start gap-4 rounded-[24px] border border-black/5 bg-surface-container-low/60 p-6 text-left shadow-sm">

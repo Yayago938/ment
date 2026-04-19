@@ -93,24 +93,22 @@ void main() {
   vec3 rampColor;
   COLOR_RAMP(colors, uv.x, rampColor);
   
-  float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
-  height = exp(height)*0.75;
-  height = (uv.y * 2.0 - height + 0.2);
-  float intensity = clamp(height, 0.2, 1.0); // never goes dark
+  // Create the movement/wave logic
+  float noise = snoise(vec2(uv.x * 1.5 + uTime * 0.1, uTime * 0.2)) * uAmplitude;
+  float wave = exp(noise * 0.5) * 0.5;
+  
+  // This factor determines how much color shows up at specific UV coordinates
+  float mask = smoothstep(0.0, uBlend, uv.y + wave - 0.2);
 
-float midPoint = 0.25;
-float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
+  // REMOVED: baseColor = vec3(0.96, 0.94, 1.0);
+  // Instead, we use the rampColor directly. 
+  // We can multiply it by the mask to create the "fading" aurora effect.
+  
+  vec3 finalColor = rampColor * mask;
 
-// PURE COLOR (no dark multiplication)
-vec3 auroraColor = rampColor;
-
-// Light base (very important)
-vec3 baseColor = vec3(0.96, 0.94, 1.0);
-
-// Blend ONLY between light + colors (no black)
-vec3 finalColor = mix(baseColor, auroraColor, auroraAlpha);
-
-fragColor = vec4(finalColor, 1.0);
+  // We set alpha to 1.0 because the background of your landing page 
+  // is dark (#0A0B10), so black (0.0, 0.0, 0.0) in the shader will look seamless.
+  fragColor = vec4(finalColor, 1.0);
 }
 `;
 

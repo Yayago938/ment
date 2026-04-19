@@ -47,10 +47,9 @@ const normalizePeople = data => {
 }
 
 const getPersonName = person =>
-  person?.student_name ||
   person?.students?.name ||
+  person?.student_name ||
   person?.name ||
-  person?.student_id ||
   'Unnamed'
 
 const getPersonImage = person =>
@@ -221,7 +220,7 @@ export default function CommitteeProfileEdit() {
             disabled={loading || saving || !id}
           >
             {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          </button> */}
         </div>
       </header>
 

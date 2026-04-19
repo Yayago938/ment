@@ -63,6 +63,7 @@ export default function App() {
         }
       />
       <Route path="/applications" element={<MyApplications />} />
+      <Route path="/applications/:applicationId" element={<ApplicationTracker />} />
       <Route path='/search' element={<Search/>} />
       <Route path="/applications/tracker" element={<ApplicationTracker />} />
       <Route path="/student-dashboard" element={<StudentDashboard />} />

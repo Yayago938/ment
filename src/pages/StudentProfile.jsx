@@ -172,7 +172,7 @@ export default function StudentProfile() {
   if (loading) return <Loader />
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-surface">
       <StudentSidebar />
 
       <TopBar

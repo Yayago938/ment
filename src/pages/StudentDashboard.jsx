@@ -228,7 +228,25 @@ const normalizeInterviewApplications = payload => {
     appliedOn: application?.applied_at || application?.updated_at || application?.created_at || '',
     status: application?.status || 'PENDING',
     nextStep: getDefaultNextStep(application?.status),
+    scheduleDate:
+      application?.interview_date ||
+      application?.scheduled_at ||
+      application?.scheduled_for ||
+      application?.slot_date ||
+      application?.slotDate ||
+      application?.interviews?.interview_date ||
+      application?.interviews?.scheduled_at ||
+      application?.interviews?.scheduled_for ||
+      '',
     sortDate: getSafeDateValue(
+      application?.interview_date,
+      application?.scheduled_at,
+      application?.scheduled_for,
+      application?.slot_date,
+      application?.slotDate,
+      application?.interviews?.interview_date,
+      application?.interviews?.scheduled_at,
+      application?.interviews?.scheduled_for,
       application?.updated_at,
       application?.applied_at,
       application?.created_at,
@@ -516,16 +534,19 @@ export default function StudentDashboard() {
       return items
     })
 
-    const interviews = applicationRows.map(([title, , date, status, nextStep]) => ({
-      id: `${title}-interview`,
-      type: status === 'Interviewing' ? 'interview' : null,
-      date,
-      title,
-      subtitle: nextStep,
-    })).filter(item => item.type)
+    const interviews = unifiedApplications
+      .filter(application => application?.source === 'interview')
+      .map(application => ({
+        id: `${application.id || application.title}-interview`,
+        type: String(application?.status || '').toUpperCase().replace(/_/g, ' ').trim() === 'INTERVIEWING' ? 'interview' : null,
+        date: application?.scheduleDate || application?.sortDate || application?.appliedOn,
+        title: application?.title || 'Interview Application',
+        subtitle: application?.nextStep || getDefaultNextStep(application?.status),
+      }))
+      .filter(item => item.type && item.date)
 
     return [...upcomingEvents, ...interviews]
-  }, [applicationRows, events, savedEvents])
+  }, [events, savedEvents, unifiedApplications])
 
   const handleSavedEventsScroll = () => {
     savedEventsSectionRef.current?.scrollIntoView({
@@ -620,7 +641,7 @@ export default function StudentDashboard() {
                   <span className="rounded-full bg-surface-container-low px-4 py-2 text-xs font-semibold">{featuredEvent.venue}</span>
                 </div>
                 <Link
-                  to={`/events/${featuredEvent.fid}/register`}
+                  to={`/events/${featuredEvent.fid}`}
                   state={{ event: featuredEvent }}
                   className="premium-button premium-glow mt-8 block w-full rounded-full bg-primary py-3 text-center text-sm font-bold text-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-md active:scale-[0.99]"
                 >
@@ -646,7 +667,7 @@ export default function StudentDashboard() {
                 >
                   <Link
                     to={event.to}
-                    state={event.id ? { eventId: event.id } : undefined}
+                    state={event.id ? { eventId: event.id, event: event.event } : undefined}
                     className="flex flex-1 items-center gap-4"
                   >
                     <div className={`flex h-16 w-16 flex-col items-center justify-center rounded-2xl ring-1 ring-black/5 ${event.bg}`}>

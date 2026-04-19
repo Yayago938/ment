@@ -12,8 +12,25 @@ const itemLabel = {
   interview: 'Interview',
 }
 
+const monthNames = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
 const startOfMonth = date => new Date(date.getFullYear(), date.getMonth(), 1)
 const endOfMonth = date => new Date(date.getFullYear(), date.getMonth() + 1, 0)
+
+const toCalendarDate = date => new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
 const formatDateKey = date => {
   const year = date.getFullYear()
@@ -22,9 +39,51 @@ const formatDateKey = date => {
   return `${year}-${month}-${day}`
 }
 
+const safeParseDate = value => {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : new Date(value.getTime())
+  }
+
+  if (typeof value === 'number') {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const trimmedValue = value.trim()
+
+  if (!trimmedValue) {
+    return null
+  }
+
+  const dateOnlyMatch = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch
+    const date = new Date(Number(year), Number(month) - 1, Number(day))
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const timestampMatch = trimmedValue.match(/^\d+$/)
+
+  if (timestampMatch) {
+    const date = new Date(Number(trimmedValue))
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const date = new Date(trimmedValue)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 const formatDisplayDate = value => {
-  const [year, month, day] = String(value).split('-').map(Number)
-  const date = new Date(year, (month || 1) - 1, day || 1)
+  const date = safeParseDate(value)
+
+  if (!date) {
+    return 'Select a date'
+  }
 
   return date.toLocaleDateString('en-US', {
     month: 'long',
@@ -34,61 +93,120 @@ const formatDisplayDate = value => {
 }
 
 export default function ScheduleCalendarModal({ open, onClose, items }) {
+  const today = useMemo(() => toCalendarDate(new Date()), [])
+
+  const validItems = useMemo(
+    () =>
+      items.flatMap(item => {
+        const parsedDate = safeParseDate(item?.date)
+
+        if (!parsedDate) {
+          return []
+        }
+
+        const calendarDate = toCalendarDate(parsedDate)
+
+        return [{
+          ...item,
+          parsedDate: calendarDate,
+          dateKey: formatDateKey(calendarDate),
+        }]
+      }),
+    [items],
+  )
+
   const itemMap = useMemo(() => {
     const mapped = new Map()
 
-    items.forEach(item => {
-      const date = new Date(item.date)
-
-      if (Number.isNaN(date.getTime())) {
-        return
-      }
-
-      const key = formatDateKey(date)
-      const entry = mapped.get(key) || []
+    validItems.forEach(item => {
+      const entry = mapped.get(item.dateKey) || []
       entry.push(item)
-      mapped.set(key, entry)
+      mapped.set(item.dateKey, entry)
     })
 
     return mapped
-  }, [items])
+  }, [validItems])
 
-  const monthOptions = useMemo(() => {
-    const uniqueMonths = Array.from(
-      new Set(
-        items.map(item => {
-          const date = new Date(item.date)
-          return Number.isNaN(date.getTime()) ? null : `${date.getFullYear()}-${date.getMonth()}`
-        }).filter(Boolean),
-      ),
-    )
+  const availableYears = useMemo(() => {
+    const years = Array.from(new Set(validItems.map(item => item.parsedDate.getFullYear())))
+      .sort((left, right) => left - right)
 
-    if (uniqueMonths.length === 0) {
-      const today = new Date()
-      return [new Date(today.getFullYear(), today.getMonth(), 1)]
+    return years.length > 0 ? years : [today.getFullYear()]
+  }, [today, validItems])
+
+  const defaultSelection = useMemo(() => {
+    const sortedDates = validItems
+      .map(item => item.parsedDate)
+      .sort((left, right) => left.getTime() - right.getTime())
+
+    const defaultDate = sortedDates.find(date => date.getTime() >= today.getTime()) || sortedDates[0] || today
+
+    return {
+      month: defaultDate.getMonth(),
+      year: defaultDate.getFullYear(),
+      dateKey: sortedDates.length > 0 ? formatDateKey(defaultDate) : null,
     }
+  }, [today, validItems])
 
-    return uniqueMonths.map(value => {
-      const [year, month] = value.split('-').map(Number)
-      return new Date(year, month, 1)
-    })
-  }, [items])
-
-  const [visibleMonth, setVisibleMonth] = useState(monthOptions[0])
-  const [selectedDateKey, setSelectedDateKey] = useState(null)
-
-  useEffect(() => {
-    setVisibleMonth(monthOptions[0])
-  }, [monthOptions])
+  const [selectedMonth, setSelectedMonth] = useState(defaultSelection.month)
+  const [selectedYear, setSelectedYear] = useState(defaultSelection.year)
+  const [selectedDateKey, setSelectedDateKey] = useState(defaultSelection.dateKey)
 
   useEffect(() => {
     if (!open) {
       return
     }
 
-    const firstKey = Array.from(itemMap.keys())[0] || formatDateKey(new Date())
-    setSelectedDateKey(firstKey)
-  }, [itemMap, open])
+    setSelectedMonth(defaultSelection.month)
+    setSelectedYear(defaultSelection.year)
+    setSelectedDateKey(defaultSelection.dateKey)
+  }, [defaultSelection, open])
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    if (!availableYears.includes(selectedYear)) {
+      setSelectedYear(defaultSelection.year)
+    }
+  }, [availableYears, defaultSelection.year, open, selectedYear])
+
+  const visibleMonth = useMemo(
+    () => new Date(selectedYear, selectedMonth, 1),
+    [selectedMonth, selectedYear],
+  )
+
+  const visibleMonthDateKeys = useMemo(
+    () =>
+      validItems
+        .filter(item =>
+          item.parsedDate.getFullYear() === selectedYear
+          && item.parsedDate.getMonth() === selectedMonth,
+        )
+        .map(item => item.dateKey)
+        .sort(),
+    [selectedMonth, selectedYear, validItems],
+  )
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const selectedItemsDate = selectedDateKey ? safeParseDate(selectedDateKey) : null
+    const isSelectedDateVisible = Boolean(
+      selectedItemsDate
+      && selectedItemsDate.getFullYear() === selectedYear
+      && selectedItemsDate.getMonth() === selectedMonth,
+    )
+
+    if (isSelectedDateVisible) {
+      return
+    }
+
+    setSelectedDateKey(visibleMonthDateKeys[0] || null)
+  }, [open, selectedDateKey, selectedMonth, selectedYear, visibleMonthDateKeys])
 
   if (!open) {
     return null
@@ -98,7 +216,7 @@ export default function ScheduleCalendarModal({ open, onClose, items }) {
   const lastDay = endOfMonth(visibleMonth)
   const leadingBlanks = (firstDay.getDay() + 6) % 7
   const totalDays = lastDay.getDate()
-  const selectedItems = itemMap.get(selectedDateKey) || []
+  const selectedItems = selectedDateKey ? itemMap.get(selectedDateKey) || [] : []
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/20 px-4 py-8 backdrop-blur-sm">
@@ -119,20 +237,32 @@ export default function ScheduleCalendarModal({ open, onClose, items }) {
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Schedule</p>
                 <h2 className="font-headline mt-2 text-3xl font-extrabold">Calendar View</h2>
               </div>
-              <select
-                value={`${visibleMonth.getFullYear()}-${visibleMonth.getMonth()}`}
-                onChange={event => {
-                  const [year, month] = event.target.value.split('-').map(Number)
-                  setVisibleMonth(new Date(year, month, 1))
-                }}
-                className="rounded-full bg-surface-container-low px-4 py-2 text-sm font-bold text-on-surface outline-none"
-              >
-                {monthOptions.map(month => (
-                  <option key={`${month.getFullYear()}-${month.getMonth()}`} value={`${month.getFullYear()}-${month.getMonth()}`}>
-                    {month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedMonth}
+                  onChange={event => setSelectedMonth(Number(event.target.value))}
+                  className="rounded-full bg-surface-container-low px-4 py-2 text-sm font-bold text-on-surface outline-none"
+                  aria-label="Select month"
+                >
+                  {monthNames.map((month, index) => (
+                    <option key={month} value={index}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={event => setSelectedYear(Number(event.target.value))}
+                  className="rounded-full bg-surface-container-low px-4 py-2 text-sm font-bold text-on-surface outline-none"
+                  aria-label="Select year"
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="mt-8 grid grid-cols-7 gap-3 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
@@ -148,7 +278,7 @@ export default function ScheduleCalendarModal({ open, onClose, items }) {
 
               {Array.from({ length: totalDays }).map((_, index) => {
                 const dayNumber = index + 1
-                const dayDate = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), dayNumber)
+                const dayDate = new Date(selectedYear, selectedMonth, dayNumber)
                 const dayKey = formatDateKey(dayDate)
                 const dayItems = itemMap.get(dayKey) || []
                 const isSelected = selectedDateKey === dayKey
@@ -163,7 +293,7 @@ export default function ScheduleCalendarModal({ open, onClose, items }) {
                     <span className="text-sm font-bold text-on-surface">{dayNumber}</span>
                     <div className="mt-4 flex gap-1.5">
                       {dayItems.slice(0, 3).map((item, dotIndex) => (
-                        <span key={`${item.type}-${dotIndex}`} className={`h-2 w-2 rounded-full ${itemTone[item.type] || 'bg-outline-variant'}`} />
+                        <span key={`${item.id || item.type}-${dotIndex}`} className={`h-2 w-2 rounded-full ${itemTone[item.type] || 'bg-outline-variant'}`} />
                       ))}
                     </div>
                   </button>
@@ -180,7 +310,7 @@ export default function ScheduleCalendarModal({ open, onClose, items }) {
 
             <div className="mt-6 space-y-4">
               {selectedItems.length > 0 ? selectedItems.map((item, index) => (
-                <article key={`${item.title}-${index}`} className="rounded-[22px] bg-white p-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+                <article key={item.id || `${item.title}-${index}`} className="rounded-[22px] bg-white p-4 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
                   <div className="flex items-center gap-3">
                     <span className={`h-2.5 w-2.5 rounded-full ${itemTone[item.type] || 'bg-outline-variant'}`} />
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">

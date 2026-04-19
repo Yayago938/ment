@@ -4,7 +4,6 @@ import StudentSidebar from '../components/StudentSidebar'
 import TopBar from '../components/TopBar'
 import FloatingBackButton from '../components/FloatingBackButton'
 import SaveItemButton from '../components/SaveItemButton'
-import { getEventById } from '../api/eventApi'
 import useSavedEvents from '../hooks/useSavedEvents'
 
 const fallbackPoster = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDclrmqU_6qblCD-kgD4Ty4AzznzU2hGGoWPp8mv4fU01ZCtpJndw2npWIGrIhKUxyexiFmDVy1Q0jZvj6SSiDCOF78AbpuDFmaWJJwYeJWjBZPvjpWuW8sIdMBz-VQTEWmvZtk0RiRLr2sCFywXsqvRdS5vBlIh2Xo1cMaTktBc46g3YNleHFLy0pQy0sclLwzNBzbMN3LzmuN1vzg0wndQFyI_PPCLT0BVFludc2xZ59e0hK-rxXMz_32vueQxS3JdrpKHZosEoI'
@@ -19,7 +18,7 @@ const formatDate = value => {
     return value
   }
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-IN', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -51,69 +50,74 @@ export default function EventDetails() {
   const { id } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const event = location.state?.event || {}
-  const [eventDetails, setEventDetails] = useState(Object.keys(event).length > 0 ? event : null)
+  const [eventDetails, setEventDetails] = useState(location.state?.event || null)
   const { pendingEventIds, isEventSaved, toggleSaveEvent } = useSavedEvents()
 
-  const selectedEventId =
-    id ||
-    event.id ||
-    event._id ||
-    location.state?.eventId ||
-    location.state?.eventPayload?.eventId ||
-    location.state?.eventPayload?.id
-
   useEffect(() => {
-    if (!selectedEventId) {
+    if (eventDetails || !id) {
       return
     }
 
     const loadEvent = async () => {
       try {
-        const response = await getEventById(selectedEventId)
-        const event =
-          response?.data?.data ||
-          response?.data?.event ||
-          response?.data ||
-          response?.event ||
-          null
-        setEventDetails(event)
+        const response = await fetch(`/events/getEvent/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        })
+        const data = await response.json()
+        setEventDetails(data)
       } catch (error) {
         console.error('Failed to load event details:', error)
       }
     }
 
     loadEvent()
-  }, [selectedEventId])
+  }, [id, eventDetails])
 
   const eventMeta = useMemo(() => {
-    const contacts = normalizeContacts(eventDetails?.point_of_contact)
-    const questions = normalizeQuestions(eventDetails?.registration_questions)
+    const contacts = normalizeContacts(
+      eventDetails?.point_of_contact || eventDetails?.contacts || []
+    )
+    const questions = normalizeQuestions(
+      eventDetails?.registration_questions || eventDetails?.questions || []
+    )
 
     return {
-      id: eventDetails?.id || eventDetails?._id || selectedEventId || null,
-      title: eventDetails?.event_name || eventDetails?.title || eventDetails?.name || 'Portfolio Review Night',
-      description:
-        eventDetails?.description ||
-        'Step into an evening of collaborative exploration at our premier Portfolio Review Night.',
-      tags: Array.isArray(eventDetails?.tags) && eventDetails.tags.length > 0 ? eventDetails.tags : ['Workshop', 'Featured'],
-      eventType: eventDetails?.event_type || 'Workshop',
-      status: eventDetails?.event_status || 'Featured',
-      venue: eventDetails?.venue || eventDetails?.location || eventDetails?.event_location || 'The Glass House, San Francisco',
-      dateLabel: formatDate(eventDetails?.event_date) || 'October 24, 2024',
-      timeLabel: eventDetails?.event_time || '6:00 PM - 9:30 PM PDT',
-      registrationDeadline: formatDate(eventDetails?.registration_deadline) || 'Closes soon',
+      id: eventDetails?.id || eventDetails?._id || id || null,
+      title:
+        eventDetails?.event_name || eventDetails?.title || eventDetails?.name || '',
+      description: eventDetails?.description || '',
+      tags: Array.isArray(eventDetails?.tags) ? eventDetails.tags : [],
+      eventType: eventDetails?.event_type || eventDetails?.type || '',
+      status: eventDetails?.event_status || eventDetails?.status || '',
+      venue:
+        eventDetails?.venue ||
+        eventDetails?.location ||
+        eventDetails?.event_location ||
+        '',
+      dateLabel: formatDate(eventDetails?.event_date || eventDetails?.date),
+      timeLabel: eventDetails?.event_time || eventDetails?.time || '',
+      registrationDeadline: formatDate(
+        eventDetails?.registration_deadline ||
+          eventDetails?.registrationDeadline ||
+          ''
+      ),
       requiresRegistration:
         typeof eventDetails?.requires_registration === 'boolean'
           ? eventDetails.requires_registration
-          : true,
-      poster: eventDetails?.poster_url || fallbackPoster,
+          : eventDetails?.requiresRegistration ?? true,
+      poster: eventDetails?.poster_url || eventDetails?.poster || fallbackPoster,
       questions,
       contacts,
     }
-  }, [eventDetails, selectedEventId])
+  }, [eventDetails, id])
 
-  const registrationEvent = eventDetails || event
+  if (!eventDetails) {
+    return <div>Loading...</div>
+  }
+
+  const registrationEvent = eventDetails
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -138,7 +142,7 @@ export default function EventDetails() {
                 eventId={eventMeta.id}
                 isSaved={isEventSaved(eventMeta.id)}
                 disabled={!eventMeta.id || pendingEventIds.has(String(eventMeta.id))}
-                onToggle={() => toggleSaveEvent(eventDetails || event)}
+                onToggle={() => toggleSaveEvent(eventDetails)}
               />
             </div>
             <div className="absolute bottom-0 left-0 z-10 w-full p-12">
