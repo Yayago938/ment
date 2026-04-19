@@ -1,4 +1,4 @@
-import api from "./axios";
+import axiosInstance from "./axios";
 
 const committeeIdRoutes = [
   (id) => `/getCommittee/${id}`,
@@ -43,12 +43,12 @@ const normalizeCommitteeCollection = (payload) => {
 };
 
 export const createCommittee = async (data) => {
-  const res = await api.post("/createCommittees", data);
+  const res = await axiosInstance.post("/createCommittees", data);
   return normalizeCommittee(res.data);
 };
 
 export const getAllCommittees = async () => {
-  const res = await api.get("/getAllCommittees");
+  const res = await axiosInstance.get("/getAllCommittees");
   return normalizeCommitteeCollection(res.data);
 };
 
@@ -57,7 +57,7 @@ export const getCommitteeById = async (id) => {
 
   for (const buildRoute of committeeIdRoutes) {
     try {
-      const res = await api.get(buildRoute(id));
+      const res = await axiosInstance.get(buildRoute(id));
       const payload =
         res.data?.committee ||
         res.data?.data?.committee ||
@@ -73,31 +73,31 @@ export const getCommitteeById = async (id) => {
 };
 
 export const getCommitteeHeads = async (committeeId) => {
-  const res = await api.post('/committee/getAllCommitteeHeads', {
+  const res = await axiosInstance.post('/committee/getAllCommitteeHeads', {
     committeeId
   })
   return res.data
 }
 
 export const getCommitteeMembers = async (committeeId) => {
-  const res = await api.post('/committee/getAllCommitteeMembers', {
+  const res = await axiosInstance.post('/committee/getAllCommitteeMembers', {
     committeeId
   })
   return res.data
 }
 
 export const addMemberToCommittee = async (data) => {
-  const res = await api.post('/committee/addMemberToCommittee', data)
+  const res = await axiosInstance.post('/committee/addMemberToCommittee', data)
   return res.data
 }
 
 export const addHeadToCommittee = async (data) => {
-  const res = await api.post('/committee/addHeadToCommittee', data)
+  const res = await axiosInstance.post('/committee/addHeadToCommittee', data)
   return res.data
 }
 
 export const deleteMemberFromCommittee = async ({ committeeId, student_email }) => {
-  const res = await api.delete("/committee/deleteMemberFromCommittee", {
+  const res = await axiosInstance.delete("/committee/deleteMemberFromCommittee", {
     data: {
       committeeId,
       student_email,
@@ -108,7 +108,7 @@ export const deleteMemberFromCommittee = async ({ committeeId, student_email }) 
 };
 
 export const deleteHeadFromCommittee = async ({ committeeId, head_email }) => {
-  const res = await api.delete("/committee/deleteHeadFromCommittee", {
+  const res = await axiosInstance.delete("/committee/deleteHeadFromCommittee", {
     data: {
       committeeId,
       head_email,
@@ -119,6 +119,6 @@ export const deleteHeadFromCommittee = async ({ committeeId, head_email }) => {
 };
 
 export const updateCommittee = async (id, data) => {
-  const res = await api.patch(`/updateCommittees/${id}`, data);
+  const res = await axiosInstance.patch(`/updateCommittees/${id}`, data);
   return res.data;
 };

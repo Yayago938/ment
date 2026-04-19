@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
-import TopBar from '../components/TopBar'
 import MaterialIcon from '../components/MaterialIcon'
 import {
   getCommitteeById,
@@ -191,25 +190,17 @@ export default function CommitteeDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="flex min-h-screen bg-surface text-on-surface">
       <CommitteeSidebar />
-      <TopBar
-        sidebar="committee"
-        placeholder="Search applications..."
-        userName={committeeData.affiliated_faculty?.name || 'Committee Lead'}
-        userRole={id ? 'Committee Dashboard' : 'Committee Lead'}
-        userImage="https://lh3.googleusercontent.com/aida-public/AB6AXuBlnMwMiijKv4SJYQ2_QLTHTAtBMGIIcsK_eIZFsEjO22G7PNZNaEemJvklXWhRzpTu7BbQdL3IS8dKkSEVZXMtLYv0tV_z3EwtyGj86ss0fDXNlY5J9Oe7kwgRs5Q0H1pbzlOMduQGuWiwtoYGWa1QKvqkRdfBRI7hILUxI1FLP05GSkj77_bLGakapEmdHcNzlf7T7Ju6lPSMIux-6N5yEBzkN5K_uc11oPeQV67J4pDbaEU1QrCT2SscFxRQ5LPiwjNDhmv3Acg"
-        actions={['notifications', 'settings']}
-      />
 
-      <main className="px-4 pb-12 pt-24 lg:ml-64 lg:p-10 lg:pt-24">
+      <main className="ml-0 min-h-screen flex-1 px-4 pb-20 pt-24 sm:px-6 md:px-8 lg:ml-64 lg:pb-0 lg:p-10 lg:pt-24">
         <section className="rounded-[32px] bg-[linear-gradient(135deg,rgba(85,69,206,0.96),rgba(244,114,182,0.88))] p-8 text-white shadow-[0_25px_70px_rgba(85,69,206,0.22)]">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/70">
                 {id ? `Committee ID ${id}` : 'Committee Portal'}
               </p>
-              <h1 className="mt-4 font-headline text-4xl font-extrabold tracking-tight lg:text-5xl">
+              <h1 className="mt-4 break-words font-headline text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
                 {committeeData.committee_name}
               </h1>
               <p className="mt-3 text-lg text-white/90">{committeeData.tagline}</p>
@@ -243,7 +234,7 @@ export default function CommitteeDashboard() {
           ) : null}
         </section>
 
-        <section className="mt-8 grid gap-6 md:grid-cols-3">
+        <section className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
           {stats.map(([eyebrow, value, chip, caption, icon, tone]) => (
             <article key={eyebrow} className="relative overflow-hidden rounded-[28px] border border-outline-variant/10 bg-white p-8 editorial-shadow">
               <span className={`block text-[10px] font-bold uppercase tracking-[0.24em] ${tone}`}>{eyebrow}</span>
@@ -259,12 +250,12 @@ export default function CommitteeDashboard() {
 
         <section className="mt-10 grid gap-10 xl:grid-cols-3">
           <div className="space-y-8 xl:col-span-2">
-            <div className="flex items-end justify-between">
-              <h2 className="font-headline text-3xl font-bold">Team Overview</h2>
-              <button className="text-sm font-semibold text-primary">View all</button>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <h2 className="font-headline text-2xl font-bold sm:text-3xl">Team Overview</h2>
+              <button className="w-full text-left text-sm font-semibold text-primary sm:w-auto sm:text-right">View all</button>
             </div>
 
-            <div className="mb-6 flex gap-3">
+            <div className="mb-6 flex flex-wrap gap-3">
               {['applications', 'members', 'heads'].map(tab => (
                 <button
                   key={tab}
@@ -294,25 +285,27 @@ export default function CommitteeDashboard() {
                         navigate(`/profile/${item.studentId}`)
                       }
                     }}
-                    className="cursor-pointer flex items-center justify-between rounded-[24px] border border-transparent bg-white p-6 transition-all hover:translate-x-1 hover:border-primary/10"
+                    className="cursor-pointer rounded-[24px] border border-transparent bg-white p-6 transition-all hover:translate-x-1 hover:border-primary/10"
                   >
-                    <div className="flex items-center gap-5">
-                      <img
-                        className="h-12 w-12 rounded-full object-cover"
-                        src={item.image || defaultAvatar}
-                        alt={item.name}
-                      />
-                      <div>
-                        <h3 className="font-bold">{item.name}</h3>
-                        <p className="text-xs text-on-surface-variant">{item.subtitle}</p>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-5">
+                        <img
+                          className="h-10 w-10 rounded-full object-cover sm:h-12 sm:w-12"
+                          src={item.image || defaultAvatar}
+                          alt={item.name}
+                        />
+                        <div className="min-w-0">
+                          <h3 className="break-words font-bold">{item.name}</h3>
+                          <p className="text-xs text-on-surface-variant">{item.subtitle}</p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-5">
-                      <span className="rounded-full bg-primary-fixed px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary-fixed-variant">
-                        {item.status}
-                      </span>
-                      <MaterialIcon className="text-outline">chevron_right</MaterialIcon>
+                      <div className="flex items-center gap-5 sm:justify-end">
+                        <span className="rounded-full bg-primary-fixed px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary-fixed-variant">
+                          {item.status}
+                        </span>
+                        <MaterialIcon className="text-outline">chevron_right</MaterialIcon>
+                      </div>
                     </div>
                   </article>
                 ))
@@ -321,13 +314,13 @@ export default function CommitteeDashboard() {
           </div>
 
           <div className="space-y-8">
-            <h2 className="font-headline text-3xl font-bold">Next Event</h2>
+            <h2 className="font-headline text-2xl font-bold sm:text-3xl">Next Event</h2>
             <article className="ambient-shadow relative flex h-[28rem] flex-col justify-end overflow-hidden rounded-[32px] p-8 text-white">
               <img className="absolute inset-0 h-full w-full object-cover" src={nextEvent?.poster_url || 'https://via.placeholder.com/400'} alt={nextEvent?.event_name || 'No Events'} />
               <div className="absolute inset-0 bg-gradient-to-t from-on-surface via-on-surface/20 to-transparent" />
               <div className="relative z-10">
                 <span className="rounded-full bg-secondary-container/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-on-secondary-container">Featured</span>
-                <h3 className="font-headline mt-4 text-4xl font-extrabold">
+                <h3 className="mt-4 break-words font-headline text-2xl font-extrabold sm:text-3xl md:text-4xl">
                   {nextEvent?.event_name || 'No Events'}
                 </h3>
                 <div className="mt-4 flex gap-4 text-sm text-white/80">
@@ -343,7 +336,7 @@ export default function CommitteeDashboard() {
                 <button
                   onClick={handleOpenEvent}
                   disabled={!nextEvent}
-                  className="mt-6 rounded-full bg-white px-4 py-3 text-sm font-bold text-on-surface"
+                  className="mt-6 w-full rounded-full bg-white px-4 py-3 text-sm font-bold text-on-surface sm:w-auto"
                 >
                   Open Event
                 </button>

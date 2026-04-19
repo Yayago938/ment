@@ -1,6 +1,36 @@
 // src/api/interviewApi.js
 import axiosInstance from "./axios";
 
+export const createInterview = async (data) => {
+  const res = await axiosInstance.post("/interview/create", data);
+  return res.data;
+};
+
+export const getInterviewsByCommittee = async (committeeId) => {
+  const res = await axiosInstance.get(`/interview/list/${committeeId}`);
+  return res.data?.data || [];
+};
+
+export const getInterviewById = async (id) => {
+  const res = await axiosInstance.get(`/interview/${id}`);
+  return res.data?.data;
+};
+
+export const deleteInterview = async (id) => {
+  const res = await axiosInstance.delete(`/interview/${id}`);
+  return res.data;
+};
+
+export const updateInterview = async (id, data) => {
+  const res = await axiosInstance.patch(`/interview/update/${id}`, data);
+  return res.data;
+};
+
+export const getInterviewApplications = async (id) => {
+  const res = await axiosInstance.get(`/interview/getApplications/${id}`);
+  return res.data?.data || [];
+};
+
 const interviewApi = {
   // PUBLIC
   getAllInterviews: (params = {}) =>
@@ -9,21 +39,16 @@ const interviewApi = {
   getCommitteeInterviews: (committeeId, params = {}) =>
     axiosInstance.get(`/interview/list/${committeeId}`, { params }),
 
-  getInterviewById: (interviewId) =>
-    axiosInstance.get(`/interview/${interviewId}`),
+  getInterviewById,
 
   // COMMITTEE
-  createInterview: (data) =>
-    axiosInstance.post("/interview/create", data),
+  createInterview,
 
-  updateInterview: (interviewId, data) =>
-    axiosInstance.patch(`/interview/update/${interviewId}`, data),
+  updateInterview,
 
-  deleteInterview: (interviewId) =>
-    axiosInstance.delete(`/interview/${interviewId}`),
+  deleteInterview,
 
-  getInterviewApplications: (interviewId, params = {}) =>
-    axiosInstance.get(`/interview/${interviewId}/applications`, { params }),
+  getInterviewApplications,
 
   updateApplicationStatus: (applicationId, data) =>
     axiosInstance.patch(`/interview/application/${applicationId}/status`, data),

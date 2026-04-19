@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import CommitteeSidebar from '../components/CommitteeSidebar'
-import TopBar from '../components/TopBar'
 import { deleteEvent, getEventsByCommittee } from '../api/eventApi'
 
 const getEventId = event => event?.id || event?._id
@@ -79,25 +78,17 @@ export default function CommitteeEvents() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="flex min-h-screen bg-surface text-on-surface">
       <CommitteeSidebar />
-      <TopBar
-        sidebar="committee"
-        placeholder="Search your events..."
-        userName="Committee Lead"
-        userRole="Event Management"
-        userImage="https://lh3.googleusercontent.com/aida-public/AB6AXuBlnMwMiijKv4SJYQ2_QLTHTAtBMGIIcsK_eIZFsEjO22G7PNZNaEemJvklXWhRzpTu7BbQdL3IS8dKkSEVZXMtLYv0tV_z3EwtyGj86ss0fDXNlY5J9Oe7kwgRs5Q0H1pbzlOMduQGuWiwtoYGWa1QKvqkRdfBRI7hILUxI1FLP05GSkj77_bLGakapEmdHcNzlf7T7Ju6lPSMIux-6N5yEBzkN5K_uc11oPeQV67J4pDbaEU1QrCT2SscFxRQ5LPiwjNDhmv3Acg"
-        actions={['notifications']}
-      />
 
-      <main className="px-4 pb-12 pt-24 lg:ml-64 lg:p-10 lg:pt-24">
+      <main className="ml-0 min-h-screen flex-1 px-4 pb-20 pt-24 sm:px-6 md:px-8 lg:ml-64 lg:pb-0 lg:p-10 lg:pt-24">
         <section className="rounded-[32px] bg-[linear-gradient(135deg,rgba(85,69,206,0.96),rgba(244,114,182,0.88))] p-8 text-white shadow-[0_25px_70px_rgba(85,69,206,0.22)]">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/70">
                 Committee Events
               </p>
-              <h1 className="mt-4 font-headline text-4xl font-extrabold tracking-tight lg:text-5xl">
+              <h1 className="mt-4 break-words font-headline text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
                 Manage Every Event You've Created
               </h1>
               <p className="mt-3 text-lg text-white/90">
@@ -107,7 +98,7 @@ export default function CommitteeEvents() {
 
             <Link
               to={committeeId ? `/committee/${committeeId}/events/new` : '/committee-dashboard'}
-              className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-bold text-on-surface transition-transform hover:scale-[1.02]"
+              className="inline-flex w-full items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-bold text-on-surface transition-transform hover:scale-[1.02] sm:w-auto"
             >
               Create New Event
             </Link>
@@ -136,15 +127,15 @@ export default function CommitteeEvents() {
         ) : null}
 
         {!loading && !error && events.length > 0 ? (
-          <section className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <section className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {events.map(event => (
               <article
                 key={getEventId(event)}
-                className="cursor-pointer rounded-[28px] bg-white p-6 shadow-md transition-transform hover:-translate-y-1"
+                className="cursor-pointer overflow-hidden rounded-[28px] bg-white p-6 shadow-md transition-transform hover:-translate-y-1"
                 onClick={() => navigate(`/events/${getEventId(event)}/registrations`, { state: { event } })}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <h3 className="text-xl font-bold text-on-surface">{event.event_name}</h3>
+                  <h3 className="line-clamp-2 break-words text-xl font-bold text-on-surface">{event.event_name}</h3>
                   <div className="flex items-center gap-3">
                     <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
                       Event
@@ -163,7 +154,7 @@ export default function CommitteeEvents() {
                   </div>
                 </div>
 
-                <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
+                <p className="mt-3 break-words text-sm leading-relaxed text-on-surface-variant">
                   {event.description || 'No description available.'}
                 </p>
 
@@ -186,7 +177,7 @@ export default function CommitteeEvents() {
                     clickEvent.stopPropagation()
                     navigate(`/events/edit/${getEventId(event)}`, { state: event })
                   }}
-                  className="mt-6 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  className="mt-6 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 sm:w-auto"
                   type="button"
                 >
                   Edit Event

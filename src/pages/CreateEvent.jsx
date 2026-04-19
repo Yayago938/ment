@@ -144,21 +144,21 @@ export default function CreateEvent() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="flex min-h-screen bg-surface text-on-surface">
       <CommitteeSidebar />
 
-      <main className="px-8 py-12 lg:ml-64">
+      <main className="ml-0 min-h-screen flex-1 px-4 py-6 pb-20 sm:px-6 sm:py-8 md:px-8 md:py-10 lg:ml-64 lg:pb-0 lg:px-12 lg:py-12">
         <div className="mx-auto max-w-5xl">
-          <header className="mb-12 flex flex-wrap items-end justify-between gap-6">
+          <header className="mb-12 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">Create New Event</h1>
+              <h1 className="text-2xl font-extrabold tracking-tight text-on-surface sm:text-3xl md:text-4xl">Create New Event</h1>
               <p className="mt-2 text-lg text-on-surface-variant">Curate a new mentorship experience for the community.</p>
             </div>
-            <div className="flex gap-4">
-              <button className="rounded-full border border-outline-variant/20 px-8 py-3 font-semibold text-primary transition-all hover:bg-primary/5" type="button" onClick={() => navigate('/committee-dashboard')}>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button className="w-full rounded-full border border-outline-variant/20 px-8 py-3 font-semibold text-primary transition-all hover:bg-primary/5 sm:w-auto" type="button" onClick={() => navigate('/committee-dashboard')}>
                 Discard
               </button>
-              <button className="rounded-full bg-primary px-8 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02]" type="submit" form="create-event-form" disabled={isSubmitting}>
+              <button className="w-full rounded-full bg-primary px-8 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02] sm:w-auto" type="submit" form="create-event-form" disabled={isSubmitting}>
                 {isSubmitting ? 'Saving...' : 'Save Event'}
               </button>
             </div>
@@ -235,12 +235,12 @@ export default function CreateEvent() {
 
             <section className="rounded-xl bg-surface-container-low p-1">
               <div className="rounded-lg bg-surface-container-lowest p-8 shadow-sm">
-                <div className="mb-8 flex items-center justify-between">
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <span className="material-symbols-outlined rounded-lg bg-primary/10 p-2 text-primary">quiz</span>
                     <h2 className="text-xl font-bold tracking-tight">Registration Questions</h2>
                   </div>
-                  <button className="flex items-center gap-1 text-sm font-bold text-primary hover:underline" type="button" onClick={addQuestion}>
+                  <button className="flex w-full items-center gap-1 text-sm font-bold text-primary hover:underline sm:w-auto" type="button" onClick={addQuestion}>
                     <span className="material-symbols-outlined text-sm">add_circle</span>
                     Add Question
                   </button>
